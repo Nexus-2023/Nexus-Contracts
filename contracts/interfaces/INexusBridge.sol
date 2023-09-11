@@ -2,14 +2,14 @@
 pragma solidity ^0.8.19;
 
 interface INexusBridge {
-    function setWithdrawal(address withdrawal_credential) external;
+    function setWithdrawal(address withdrawalCredential) external;
 
     function validatorExit() external payable;
 
     function depositValidator(
         bytes calldata pubkey,
-        bytes calldata withdrawal_credential,
+        bytes calldata withdrawalCredential,
         bytes calldata signature,
-        bytes calldata deposit_root
+        bytes calldata depositRoot
     ) external;
 }

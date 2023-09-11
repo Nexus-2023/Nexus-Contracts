@@ -3,6 +3,9 @@ pragma solidity ^0.8.19;
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Withdraw} from "./Withdrawal.sol";
 import {INexusBridge} from "./interfaces/INexusBridge.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 /**
  * @title Nexus Core Contract
@@ -15,7 +18,7 @@ import {INexusBridge} from "./interfaces/INexusBridge.sol";
  * 6. Recharge funds in SSV contract for validator operation
  * 7. Reward distribution for rollup to DAO and Nexus Fee Contract
  */
-contract Nexus {
+contract Nexus is UUPSUpgradeable, OwnableUpgradeable{
     using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableSet for EnumerableSet.UintSet;
 
@@ -32,7 +35,7 @@ contract Nexus {
     mapping(address => Rollup) public rollups;
     mapping(uint32 => uint32[]) public operatorClusters;
 
-    event RollupWhitelisted(string name, address rollup_address);
+    event RollupWhitelisted(string name, address rollupAddress);
     error NotAdmin();
     error NotNexusBot();
     error AddressAlreadyWhitelisted();
@@ -58,39 +61,38 @@ contract Nexus {
         _;
     }
 
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {
+
+    }
+
     function registerRollup(
-        address bridge_contract,
-        uint32 operator_cluster,
-        uint16 staking_limit,
-        address dao_address
+        address bridgeContract,
+        uint32 operatorCluster,
+        uint16 stakingLimit,
+        address daoAddress
     ) external onlyWhitelistedRollup {
         if (rollups[msg.sender].bridgeContract != address(0))
             revert RollupAlreadyRegistered();
-        Withdraw withdrawal_contract = new Withdraw(dao_address, 1000);
+        Withdraw withdrawalContract = new Withdraw(daoAddress, 1000);
         rollups[msg.sender] = Rollup(
-            bridge_contract,
-            staking_limit,
-            address(withdrawal_contract),
+            bridgeContract,
+            stakingLimit,
+            address(withdrawalContract),
             0,
-            operator_cluster
+            operatorCluster
         );
+        INexusBridge(bridgeContract).setWithdrawal(address(withdrawalContract));
         emit RollupRegistered(msg.sender);
-        (bool success, bytes memory data) = bridge_contract.call(
-            abi.encodeWithSelector(
-                INexusBridge.setWithdrawal.selector,
-                address(withdrawal_contract)
-            )
-        );
     }
 
     function changeStakingLimit(
-        uint16 new_staking_limit
+        uint16 newStakingLimit
     ) external onlyWhitelistedRollup {
         emit StakingLimitChanged(
             rollups[msg.sender].stakingLimit,
-            new_staking_limit
+            newStakingLimit
         );
-        rollups[msg.sender].stakingLimit = new_staking_limit;
+        rollups[msg.sender].stakingLimit = newStakingLimit;
     }
 
     function depositValidatorRollup() external onlyOffChainBot {}

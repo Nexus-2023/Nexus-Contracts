@@ -13,15 +13,15 @@ contract Withdraw {
     address public immutable NEXUS_CONTRACT;
     address public immutable DAO_ADDRESS;
     uint16 public nexusShare;
-    uint16 constant BASIS_POINT = 10000;
-    uint256 public MINIMUM_SLASHED_BALANCE = 16 ether;
-    bytes[] public exiting_pubkeys;
-    uint256 public amount_slashed;
+    uint16 public constant BASIS_POINT = 10000;
+    uint256 public minimumSlashedAmount = 16 ether;
+    bytes[] public exitingPubkeys;
+    uint256 public amountSlashed;
 
     // Events
     event SlashingAmountUpdated(uint256 amount);
-    event NexusShareUpdated(uint32 new_share);
-    event ExitingValidatorAdded(bytes public_key);
+    event NexusShareUpdated(uint32 newShare);
+    event ExitingValidatorAdded(bytes publicKey);
     event NexusRewardSent(uint256 amount);
     event RollupRewardSent(uint256 amount);
 
@@ -34,15 +34,15 @@ contract Withdraw {
         _;
     }
 
-    constructor(address _dao_address, uint16 _nexus_fee_percentage) {
-        DAO_ADDRESS = _dao_address;
-        nexusShare = _nexus_fee_percentage;
+    constructor(address _daoAddress, uint16 _nexusFeePercentage) {
+        DAO_ADDRESS = _daoAddress;
+        nexusShare = _nexusFeePercentage;
         NEXUS_CONTRACT = msg.sender;
     }
 
     function exitInitiated(bytes[] memory pubkeys) external onlyNexus {
         for (uint256 i; i < pubkeys.length; ) {
-            exiting_pubkeys.addElement(pubkeys[i]);
+            exitingPubkeys.addElement(pubkeys[i]);
             emit ExitingValidatorAdded(pubkeys[i]);
             unchecked {
                 ++i;
@@ -73,21 +73,17 @@ contract Withdraw {
     }
 
     function _sendBridge(uint256 amount) internal {
-        (bool rollupSuccess, bytes memory rollupData) = DAO_ADDRESS.call{
-            value: amount,
-            gas: 5000
-        }("");
     }
 
-    function slashing(uint256 slashing_amount) external onlyNexus {
-        if (amount_slashed != slashing_amount) {
-            amount_slashed = slashing_amount;
-            emit SlashingAmountUpdated(slashing_amount);
+    function slashing(uint256 slashingAmount) external onlyNexus {
+        if (amountSlashed != slashingAmount) {
+            amountSlashed = slashingAmount;
+            emit SlashingAmountUpdated(slashingAmount);
         }
     }
 
-    function updateNexusRewards(uint16 _new_fee) external onlyNexus {
-        nexusShare = _new_fee;
-        emit NexusShareUpdated(_new_fee);
+    function updateNexusRewards(uint16 _newFee) external onlyNexus {
+        nexusShare = _newFee;
+        emit NexusShareUpdated(_newFee);
     }
 }

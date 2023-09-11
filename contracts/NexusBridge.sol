@@ -16,8 +16,8 @@ abstract contract NexusBridge {
         0xff50ed3d0ec03aC01D4C79aAd74928BFF48a7b2b;
     address public constant NEXUS_NETWORK =
         0xff50ed3d0ec03aC01D4C79aAd74928BFF48a7b2b;
-    address public WITHDRAWAL_CREDENTAILS;
-    uint256 constant VALIDATOR_DEPOSIT = 32 ether;
+    address public withdrawalCrendentails;
+    uint256 public constant VALIDATOR_DEPOSIT = 32 ether;
 
     error NotNexus();
     error IncorrectWithdrawalAddress();
@@ -33,22 +33,22 @@ abstract contract NexusBridge {
     }
 
     modifier onlyWithdrawal() {
-        if (msg.sender != WITHDRAWAL_CREDENTAILS)
+        if (msg.sender != withdrawalCrendentails)
             revert IncorrectWithdrawalAddress();
         _;
     }
 
-    function setWithdrawal(address withdrawal_credential) external onlyNexus {
-        if (WITHDRAWAL_CREDENTAILS != address(0))
+    function setWithdrawal(address _withdrawalCredentials) external onlyNexus {
+        if (withdrawalCrendentails != address(0))
             revert WithdrawalAddressExists();
-        WITHDRAWAL_CREDENTAILS = withdrawal_credential;
+        withdrawalCrendentails = _withdrawalCredentials;
     }
 
     function depositValidator(
         bytes calldata pubkey,
-        bytes calldata withdrawal_credential,
+        bytes calldata withdrawalCredential,
         bytes calldata signature,
-        bytes calldata deposit_root
+        bytes calldata depositRoot
     ) external onlyNexus {
         // if (keccak256(abi.encodePacked(withdrawal_credential)) != keccak256(abi.encodePacked(WITHDRAWAL_CREDENTAILS))) revert IncorrectWithdrawalCredentials();
         (bool success, bytes memory data) = DEPOSIT_CONTRACT.call{
@@ -57,9 +57,9 @@ abstract contract NexusBridge {
             abi.encodeWithSignature(
                 "deposit(bytes,bytes,bytes,bytes32)",
                 pubkey,
-                withdrawal_credential,
+                withdrawalCredential,
                 signature,
-                deposit_root
+                depositRoot
             )
         );
         if (!success) {

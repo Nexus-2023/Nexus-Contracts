@@ -3,9 +3,8 @@ pragma solidity ^0.8.19;
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Withdraw} from "./Withdrawal.sol";
 import {INexusBridge} from "./interfaces/INexusBridge.sol";
-import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {Ownable} from "./utils/NexusOwnable.sol";
+import {Proxiable} from "./utils/UUPSUpgreadable.sol";
 
 /**
  * @title Nexus Core Contract
@@ -18,7 +17,7 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
  * 6. Recharge funds in SSV contract for validator operation
  * 7. Reward distribution for rollup to DAO and Nexus Fee Contract
  */
-contract Nexus is UUPSUpgradeable, OwnableUpgradeable{
+contract Nexus is Ownable,Proxiable{
     using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableSet for EnumerableSet.UintSet;
 
@@ -30,25 +29,19 @@ contract Nexus is UUPSUpgradeable, OwnableUpgradeable{
         uint32 operatorCluster;
     }
     EnumerableSet.AddressSet private whitelistedRollups;
-    address public constant ADMIN = 0x4142676ec5706706D3a0792997c4ea343405376b;
     address public offChainBot;
     mapping(address => Rollup) public rollups;
     mapping(uint32 => uint32[]) public operatorClusters;
 
     event RollupWhitelisted(string name, address rollupAddress);
-    error NotAdmin();
     error NotNexusBot();
     error AddressAlreadyWhitelisted();
     error AddressNotWhitelisted();
     error RollupAlreadyPresent();
     error RollupAlreadyRegistered();
 
-    event RollupRegistered(address adminAddress);
+    event RollupRegistered(address adminAddress,address withdrawalAddress);
     event StakingLimitChanged(uint16 oldStakingLimit, uint16 newStakingLimit);
-    modifier onlyAdmin() {
-        if (msg.sender != ADMIN) revert NotAdmin();
-        _;
-    }
 
     modifier onlyOffChainBot() {
         if (msg.sender != offChainBot) revert NotNexusBot();
@@ -61,8 +54,12 @@ contract Nexus is UUPSUpgradeable, OwnableUpgradeable{
         _;
     }
 
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {
+    function initialize() public initilizeOnce{
+        _ownableInit(msg.sender);
+    }
 
+    function updateProxy(address newImplemetation) public onlyOwner{
+        updateCodeAddress(newImplemetation);
     }
 
     function registerRollup(
@@ -82,7 +79,7 @@ contract Nexus is UUPSUpgradeable, OwnableUpgradeable{
             operatorCluster
         );
         INexusBridge(bridgeContract).setWithdrawal(address(withdrawalContract));
-        emit RollupRegistered(msg.sender);
+        emit RollupRegistered(msg.sender,address(withdrawalContract));
     }
 
     function changeStakingLimit(
@@ -102,7 +99,7 @@ contract Nexus is UUPSUpgradeable, OwnableUpgradeable{
     function whitelistRollup(
         string calldata name,
         address rollupAddress
-    ) external onlyAdmin {
+    ) external onlyOwner {
         if (whitelistedRollups.contains(rollupAddress))
             revert AddressAlreadyWhitelisted();
         if (whitelistedRollups.add(rollupAddress)) {

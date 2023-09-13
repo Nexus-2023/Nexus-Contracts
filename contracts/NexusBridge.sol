@@ -15,7 +15,7 @@ abstract contract NexusBridge {
     address public constant DEPOSIT_CONTRACT =
         0xff50ed3d0ec03aC01D4C79aAd74928BFF48a7b2b;
     address public constant NEXUS_NETWORK =
-        0xff50ed3d0ec03aC01D4C79aAd74928BFF48a7b2b;
+        0x5DfFeE1B9C7D68726545c3e05fB99ACc6660aC05;
     address public withdrawalCrendentails;
     uint256 public constant VALIDATOR_DEPOSIT = 32 ether;
 

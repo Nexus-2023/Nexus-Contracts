@@ -9,7 +9,7 @@ contract Ownable {
     error NotOwner();
     error ContractAlreadyInitialized();
     modifier onlyOwner() {
-        if (msg.sender == owner) revert NotOwner();
+        if (msg.sender != owner) revert NotOwner();
         _;
     }
 

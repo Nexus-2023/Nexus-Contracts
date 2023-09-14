@@ -14,10 +14,10 @@ abstract contract NexusBridge {
     // To be changed to the respective network addresses:
     address public constant DEPOSIT_CONTRACT =
         0xff50ed3d0ec03aC01D4C79aAd74928BFF48a7b2b;
-    address public constant NEXUS_NETWORK =
-        0x5DfFeE1B9C7D68726545c3e05fB99ACc6660aC05;
-    address public withdrawalCrendentails;
     uint256 public constant VALIDATOR_DEPOSIT = 32 ether;
+    address public NEXUS_NETWORK =
+        0x29030F72EB50dECf3d8eb86Ce58256a3e8f85253;
+    address public withdrawalCrendentails;
 
     error NotNexus();
     error IncorrectWithdrawalAddress();

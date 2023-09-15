@@ -10,6 +10,6 @@ interface INexusBridge {
         bytes calldata pubkey,
         bytes calldata withdrawalCredential,
         bytes calldata signature,
-        bytes calldata depositRoot
+        bytes32 depositRoot
     ) external;
 }

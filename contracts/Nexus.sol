@@ -5,6 +5,8 @@ import {Withdraw} from "./Withdrawal.sol";
 import {INexusBridge} from "./interfaces/INexusBridge.sol";
 import {Ownable} from "./utils/NexusOwnable.sol";
 import {Proxiable} from "./utils/UUPSUpgreadable.sol";
+import {ISSVNetworkCore} from "./interfaces/ISSVNetwork.sol";
+import {INexusInterface} from "./interfaces/INexusInterface.sol";
 
 /**
  * @title Nexus Core Contract
@@ -17,31 +19,16 @@ import {Proxiable} from "./utils/UUPSUpgreadable.sol";
  * 6. Recharge funds in SSV contract for validator operation
  * 7. Reward distribution for rollup to DAO and Nexus Fee Contract
  */
-contract Nexus is Ownable,Proxiable{
+contract Nexus is INexusInterface,Ownable,Proxiable{
     using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableSet for EnumerableSet.UintSet;
 
-    struct Rollup {
-        address bridgeContract;
-        uint16 stakingLimit;
-        address withdrawalAddress;
-        uint64 validatorCount;
-        uint32 operatorCluster;
-    }
     EnumerableSet.AddressSet private whitelistedRollups;
     address public offChainBot;
+    address private SSVNetwork;
+    address private SSVToken;
     mapping(address => Rollup) public rollups;
     mapping(uint32 => uint32[]) public operatorClusters;
-
-    event RollupWhitelisted(string name, address rollupAddress);
-    error NotNexusBot();
-    error AddressAlreadyWhitelisted();
-    error AddressNotWhitelisted();
-    error RollupAlreadyPresent();
-    error RollupAlreadyRegistered();
-
-    event RollupRegistered(address adminAddress,address withdrawalAddress);
-    event StakingLimitChanged(uint16 oldStakingLimit, uint16 newStakingLimit);
 
     modifier onlyOffChainBot() {
         if (msg.sender != offChainBot) revert NotNexusBot();
@@ -85,16 +72,31 @@ contract Nexus is Ownable,Proxiable{
     function changeStakingLimit(
         uint16 newStakingLimit
     ) external onlyWhitelistedRollup {
-        emit StakingLimitChanged(
+        emit StakingLimitChanged(msg.sender,
             rollups[msg.sender].stakingLimit,
             newStakingLimit
         );
         rollups[msg.sender].stakingLimit = newStakingLimit;
     }
 
-    function depositValidatorRollup() external onlyOffChainBot {}
+    function setOffChainBot(address _botAddress) external onlyOwner {
+        offChainBot = _botAddress;
+    }
 
-    function depositValidatorShares() external onlyOffChainBot {}
+    function depositValidatorRollup(address _rollupAdmin,Validator[] calldata _validators) external override onlyOffChainBot {
+        for (uint i=0;i<_validators.length;i++){
+            INexusBridge(rollups[_rollupAdmin].bridgeContract).depositValidator(_validators[i].pubKey,_validators[i].withdrawalAddress,_validators[i].signature,_validators[i].depositRoot); 
+            emit ValidatorSubmitted(_validators[i].pubKey, _rollupAdmin);
+        }
+        rollups[_rollupAdmin].validatorCount += uint64(_validators.length);
+    }
+
+    function depositValidatorShares(address _rollupAdmin,ValidatorShares[] calldata _validatorShares) external override onlyOffChainBot {
+        for (uint i=0;i<_validatorShares.length;i++){
+            ISSVNetworkCore(SSVNetwork).registerValidator(_validatorShares[i].pubKey, _validatorShares[i].operatorIds, _validatorShares[i].sharesEncrypted, _validatorShares[i].amount, _validatorShares[i].cluster);
+            emit ValidatorShareSubmitted(_validatorShares[i].pubKey, _rollupAdmin);
+        }
+    }
 
     function whitelistRollup(
         string calldata name,

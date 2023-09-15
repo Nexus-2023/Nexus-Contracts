@@ -4,7 +4,6 @@ import { HardhatUserConfig, task } from "hardhat/config";
 import "@nomiclabs/hardhat-etherscan";
 import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
-import "hardhat-upgrades";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
 
@@ -43,7 +42,12 @@ const config: HardhatUserConfig = {
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
-    hardhat: {},
+    hardhat: {
+      forking: {
+        enabled: true,
+        url: process.env.GOERLI_URL || "",
+      },
+    },
   },
   paths: {
     sources: "./contracts",

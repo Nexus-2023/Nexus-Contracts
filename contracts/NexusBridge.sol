@@ -1,5 +1,6 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
+import {INexusBridge} from "./interfaces/INexusBridge.sol";
 
 /**
  * @title Nexus Bridge Contract
@@ -10,7 +11,7 @@ pragma solidity ^0.8.19;
  * The staking ratio is maintained by the Nexus Contract and is set during the registration.It
  * can be changed anytime by rollup while doing a transaction to the Nexus Contract.
  */
-abstract contract NexusBridge {
+abstract contract NexusBridge is INexusBridge{
     // To be changed to the respective network addresses:
     address public constant DEPOSIT_CONTRACT =
         0xff50ed3d0ec03aC01D4C79aAd74928BFF48a7b2b;
@@ -48,8 +49,8 @@ abstract contract NexusBridge {
         bytes calldata pubkey,
         bytes calldata withdrawalCredential,
         bytes calldata signature,
-        bytes calldata depositRoot
-    ) external onlyNexus {
+        bytes32 depositRoot
+    ) external override onlyNexus {
         // if (keccak256(abi.encodePacked(withdrawal_credential)) != keccak256(abi.encodePacked(WITHDRAWAL_CREDENTAILS))) revert IncorrectWithdrawalCredentials();
         (bool success, bytes memory data) = DEPOSIT_CONTRACT.call{
             value: VALIDATOR_DEPOSIT
@@ -67,7 +68,7 @@ abstract contract NexusBridge {
         }
     }
 
-    function validatorExit() external payable onlyWithdrawal {
+    function validatorExit() external override payable onlyWithdrawal {
         emit ValidatorExitReceived(msg.value);
     }
 }

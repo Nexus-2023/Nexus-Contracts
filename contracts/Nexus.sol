@@ -7,6 +7,7 @@ import {Ownable} from "./utils/NexusOwnable.sol";
 import {Proxiable} from "./utils/UUPSUpgreadable.sol";
 import {ISSVNetworkCore} from "./interfaces/ISSVNetwork.sol";
 import {INexusInterface} from "./interfaces/INexusInterface.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @title Nexus Core Contract
@@ -25,10 +26,12 @@ contract Nexus is INexusInterface,Ownable,Proxiable{
 
     EnumerableSet.AddressSet private whitelistedRollups;
     address public offChainBot;
-    address private SSVNetwork;
-    address private SSVToken;
     mapping(address => Rollup) public rollups;
     mapping(uint32 => uint32[]) public operatorClusters;
+
+    // change these addresses to mainnet address when deploying on mainnet 
+    address private constant SSV_NETWORK=0xC3CD9A0aE89Fff83b71b58b6512D43F8a41f363D;
+    address private constant SSV_TOKEN=0x3a9f01091C446bdE031E39ea8354647AFef091E7;
 
     modifier onlyOffChainBot() {
         if (msg.sender != offChainBot) revert NotNexusBot();
@@ -91,9 +94,14 @@ contract Nexus is INexusInterface,Ownable,Proxiable{
         rollups[_rollupAdmin].validatorCount += uint64(_validators.length);
     }
 
+    function deposiut(Validator memory _validator) external pure returns(Validator memory){
+        return _validator;
+    }
+
     function depositValidatorShares(address _rollupAdmin,ValidatorShares[] calldata _validatorShares) external override onlyOffChainBot {
         for (uint i=0;i<_validatorShares.length;i++){
-            ISSVNetworkCore(SSVNetwork).registerValidator(_validatorShares[i].pubKey, _validatorShares[i].operatorIds, _validatorShares[i].sharesEncrypted, _validatorShares[i].amount, _validatorShares[i].cluster);
+            IERC20(SSV_TOKEN).approve(SSV_NETWORK,_validatorShares[i].amount);
+            ISSVNetworkCore(SSV_NETWORK).registerValidator(_validatorShares[i].pubKey, _validatorShares[i].operatorIds, _validatorShares[i].sharesEncrypted, _validatorShares[i].amount, _validatorShares[i].cluster);
             emit ValidatorShareSubmitted(_validatorShares[i].pubKey, _rollupAdmin);
         }
     }

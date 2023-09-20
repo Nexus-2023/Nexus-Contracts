@@ -31,63 +31,79 @@ describe("registration test", function () {
     nexus = await Nexus.attach(nexusProxy.address);
     console.log(await nexus.getOwner());
   });
-  it("should whitelist rollup", async function () {
-    await nexus.whitelistRollup("nexus", await rollupAdmin.getAddress());
-    await expect(
-      nexus
-        .connect(user1)
-        .whitelistRollup("nexus", await rollupAdmin.getAddress())
-    ).to.be.revertedWith("NotOwner");
-    await expect(
-      nexus.whitelistRollup("nexus", await rollupAdmin.getAddress())
-    ).to.be.revertedWith("AddressAlreadyWhitelisted");
-  });
-  it("should register rollup", async function () {
-    // await nexus.whitelistRollup("nexus", await rollupAdmin.getAddress());
-    await nexus
-      .connect(rollupAdmin)
-      .registerRollup(
-        bridgeContract.address,
-        1,
-        10,
-        await rollupAdmin.getAddress()
-      );
-    const Withdraw = await ethers.getContractFactory("Withdraw");
-    withdraw = await Withdraw.attach(
-      (
-        await nexus.rollups(await rollupAdmin.getAddress())
-      ).withdrawalAddress
-    );
-
-    await expect(
-      nexus
-        .connect(user1)
+  describe("Rollup Registration", function () {
+    it("should whitelist rollup", async function () {
+      await nexus.whitelistRollup("nexus", await rollupAdmin.getAddress());
+      await expect(
+        nexus
+          .connect(user1)
+          .whitelistRollup("nexus", await rollupAdmin.getAddress())
+      ).to.be.revertedWith("NotOwner");
+      await expect(
+        nexus.whitelistRollup("nexus", await rollupAdmin.getAddress())
+      ).to.be.revertedWith("AddressAlreadyWhitelisted");
+    });
+    it("should register rollup", async function () {
+      // await nexus.whitelistRollup("nexus", await rollupAdmin.getAddress());
+      await nexus
+        .connect(rollupAdmin)
         .registerRollup(
           bridgeContract.address,
           1,
           10,
           await rollupAdmin.getAddress()
-        )
-    ).to.be.revertedWith("AddressNotWhitelisted");
+        );
+      const Withdraw = await ethers.getContractFactory("Withdraw");
+      withdraw = await Withdraw.attach(
+        (
+          await nexus.rollups(await rollupAdmin.getAddress())
+        ).withdrawalAddress
+      );
+
+      await expect(
+        nexus
+          .connect(user1)
+          .registerRollup(
+            bridgeContract.address,
+            1,
+            10,
+            await rollupAdmin.getAddress()
+          )
+      ).to.be.revertedWith("AddressNotWhitelisted");
+    });
+    it("deployed withdrawal contract should have correct params", async function () {
+      await expect(await withdraw.DAO_ADDRESS()).to.be.equal(
+        await rollupAdmin.getAddress()
+      );
+      await expect(await withdraw.nexusShare()).to.be.equal(1000);
+      await expect(await withdraw.NEXUS_CONTRACT()).to.be.equal(nexus.address);
+    });
+    it("should change staking limit", async function () {
+      await expect(
+        (
+          await nexus.rollups(await rollupAdmin.getAddress())
+        ).stakingLimit
+      ).to.be.equal(10);
+      await nexus.connect(rollupAdmin).changeStakingLimit(20);
+      await expect(
+        (
+          await nexus.rollups(await rollupAdmin.getAddress())
+        ).stakingLimit
+      ).to.be.equal(20);
+    });
   });
-  it("deployed withdrawal contract should have correct params", async function () {
-    await expect(await withdraw.DAO_ADDRESS()).to.be.equal(
-      await rollupAdmin.getAddress()
-    );
-    await expect(await withdraw.nexusShare()).to.be.equal(1000);
-    await expect(await withdraw.NEXUS_CONTRACT()).to.be.equal(nexus.address);
-  });
-  it("should change staking limit", async function () {
-    await expect(
-      (
-        await nexus.rollups(await rollupAdmin.getAddress())
-      ).stakingLimit
-    ).to.be.equal(10);
-    await nexus.connect(rollupAdmin).changeStakingLimit(20);
-    await expect(
-      (
-        await nexus.rollups(await rollupAdmin.getAddress())
-      ).stakingLimit
-    ).to.be.equal(20);
-  });
+  describe("Validator Management", function () {
+    const validators:Validat = []
+    const validator_shares = []
+    before(async function () {
+      await user1.sendTransaction({
+        to: bridgeContract.address,
+        value: ethers.utils.parseEther("2000"),
+      });
+    });
+    it("should deposit validator to bridge", async function () {
+      
+      await 
+    });
+  })
 });

@@ -24,13 +24,13 @@ interface INexusInterface {
         ISSVNetworkCore.Cluster cluster;
     }
 
-    event RollupWhitelisted(string name, address rollupAddress);
     error NotNexusBot();
     error AddressAlreadyWhitelisted();
     error AddressNotWhitelisted();
     error RollupAlreadyPresent();
     error RollupAlreadyRegistered();
 
+    event RollupWhitelisted(string name, address rollupAddress);
     event RollupRegistered(address rollupAdmin,address withdrawalAddress);
     event StakingLimitChanged(address rollupAdmin,uint16 oldStakingLimit, uint16 newStakingLimit);
     event ValidatorSubmitted(bytes pubKey, address rolupAdmin);

@@ -33,7 +33,7 @@ interface INexusInterface {
     event RollupWhitelisted(string name, address rollupAddress);
     event RollupRegistered(address rollupAdmin,address withdrawalAddress);
     event StakingLimitChanged(address rollupAdmin,uint16 oldStakingLimit, uint16 newStakingLimit);
-    event ValidatorSubmitted(bytes pubKey, address rolupAdmin);
+    event ValidatorSubmitted(Validator[] validators, address rolupAdmin);
     event ValidatorShareSubmitted(bytes pubKey, address rolupAdmin);
 
     function depositValidatorRollup(address _rollupAdmin,Validator[] calldata _validators) external;

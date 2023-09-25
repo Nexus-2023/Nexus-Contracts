@@ -9,6 +9,7 @@ import {ISSVNetworkCore} from "./interfaces/ISSVNetwork.sol";
 import {INexusInterface} from "./interfaces/INexusInterface.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+
 /**
  * @title Nexus Core Contract
  * @dev This contract is heart and soul of Nexus Network and is used for Operations like
@@ -29,7 +30,7 @@ contract Nexus is INexusInterface,Ownable,Proxiable{
     mapping(address => Rollup) public rollups;
     mapping(uint32 => uint32[]) public operatorClusters;
 
-    // change these addresses to mainnet address when deploying on mainnet 
+    // change these addresses to mainnet address when deploying on mainnet
     address private constant SSV_NETWORK=0xC3CD9A0aE89Fff83b71b58b6512D43F8a41f363D;
     address private constant SSV_TOKEN=0x3a9f01091C446bdE031E39ea8354647AFef091E7;
 
@@ -46,6 +47,10 @@ contract Nexus is INexusInterface,Ownable,Proxiable{
 
     function initialize() public initilizeOnce{
         _ownableInit(msg.sender);
+    }
+
+    function isRollupWhitelisted(address rollupAddress) external view returns(bool){
+        return whitelistedRollups.contains(rollupAddress);
     }
 
     function updateProxy(address newImplemetation) public onlyOwner{
@@ -87,15 +92,9 @@ contract Nexus is INexusInterface,Ownable,Proxiable{
     }
 
     function depositValidatorRollup(address _rollupAdmin,Validator[] calldata _validators) external override onlyOffChainBot {
-        for (uint i=0;i<_validators.length;i++){
-            INexusBridge(rollups[_rollupAdmin].bridgeContract).depositValidator(_validators[i].pubKey,_validators[i].withdrawalAddress,_validators[i].signature,_validators[i].depositRoot); 
-            emit ValidatorSubmitted(_validators[i].pubKey, _rollupAdmin);
-        }
+        INexusBridge(rollups[_rollupAdmin].bridgeContract).depositValidatorNexus(_validators,uint256(rollups[_rollupAdmin].stakingLimit),uint256(rollups[_rollupAdmin].validatorCount));
         rollups[_rollupAdmin].validatorCount += uint64(_validators.length);
-    }
-
-    function deposiut(Validator memory _validator) external pure returns(Validator memory){
-        return _validator;
+        emit ValidatorSubmitted(_validators, _rollupAdmin);
     }
 
     function depositValidatorShares(address _rollupAdmin,ValidatorShares[] calldata _validatorShares) external override onlyOffChainBot {

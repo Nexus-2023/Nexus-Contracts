@@ -1,34 +1,34 @@
-import { Contract, Signer, wordlists } from "ethers";
-import { Interface } from "ethers/lib/utils";
+import { Contract, Interface, Signer } from "ethers";
 import { ethers } from "hardhat";
+import { BridgeContract, Withdraw, Proxy, Nexus } from "../typechain";
 const { expect } = require("chai");
 
 describe("registration test", function () {
   let owner: Signer, rollupAdmin: Signer, user1: Signer;
-  let bridgeContract: Contract,
-    nexus: Contract,
+  let bridgeContract: BridgeContract,
+    nexus: Nexus,
     NexusImplementation: Interface,
-    withdraw: Contract,
-    nexusProxy: Contract;
+    withdraw: Withdraw,
+    nexusProxy: Proxy;
   before(async function () {
     [owner, rollupAdmin, user1] = await ethers.getSigners();
     console.log("owner address", await owner.getAddress());
     console.log("rollup admin address", await rollupAdmin.getAddress());
     console.log("user address", await user1.getAddress());
-    const Nexus = await ethers.getContractFactory("Nexus");
-    NexusImplementation = Nexus.interface;
-    const nexusImpl = await Nexus.deploy();
-    console.log("nexus implementation deployed:", nexusImpl.address);
+    const NexusContract = await ethers.getContractFactory("Nexus");
+    NexusImplementation = NexusContract.interface;
+    const nexusImpl = await NexusContract.deploy();
+    console.log("nexus implementation deployed:", await nexusImpl.getAddress());
     const NexusProxy = await ethers.getContractFactory("Proxy");
     nexusProxy = await NexusProxy.deploy(
       NexusImplementation.encodeFunctionData("initialize", []),
-      nexusImpl.address
+      await nexusImpl.getAddress()
     );
-    console.log("nexus proxy deployed:", nexusProxy.address);
+    console.log("nexus proxy deployed:", await nexusProxy.getAddress());
     const BridgeContract = await ethers.getContractFactory("BridgeContract");
-    bridgeContract = await BridgeContract.deploy(nexusProxy.address);
-    console.log("bridge contract for rollup:", bridgeContract.address);
-    nexus = await Nexus.attach(nexusProxy.address);
+    bridgeContract = await BridgeContract.deploy(await nexusProxy.getAddress());
+    console.log("bridge contract for rollup:", await bridgeContract.getAddress());
+    nexus = await NexusContract.attach(await nexusProxy.getAddress());
     console.log(await nexus.getOwner());
   });
   describe("Rollup Registration", function () {
@@ -38,21 +38,22 @@ describe("registration test", function () {
         nexus
           .connect(user1)
           .whitelistRollup("nexus", await rollupAdmin.getAddress())
-      ).to.be.revertedWith("NotOwner");
+      ).to.be.revertedWithCustomError(nexus,"NotOwner");
       await expect(
         nexus.whitelistRollup("nexus", await rollupAdmin.getAddress())
-      ).to.be.revertedWith("AddressAlreadyWhitelisted");
+      ).to.be.revertedWithCustomError(nexus,"AddressAlreadyWhitelisted");
     });
     it("should register rollup", async function () {
       // await nexus.whitelistRollup("nexus", await rollupAdmin.getAddress());
       await nexus
         .connect(rollupAdmin)
         .registerRollup(
-          bridgeContract.address,
+          await bridgeContract.getAddress(),
           1,
           10,
           await rollupAdmin.getAddress()
         );
+
       const Withdraw = await ethers.getContractFactory("Withdraw");
       withdraw = await Withdraw.attach(
         (
@@ -64,19 +65,19 @@ describe("registration test", function () {
         nexus
           .connect(user1)
           .registerRollup(
-            bridgeContract.address,
+            await bridgeContract.getAddress(),
             1,
             10,
             await rollupAdmin.getAddress()
           )
-      ).to.be.revertedWith("AddressNotWhitelisted");
+      ).to.be.revertedWithCustomError(nexus,"AddressNotWhitelisted");
     });
     it("deployed withdrawal contract should have correct params", async function () {
       await expect(await withdraw.DAO_ADDRESS()).to.be.equal(
         await rollupAdmin.getAddress()
       );
       await expect(await withdraw.nexusShare()).to.be.equal(1000);
-      await expect(await withdraw.NEXUS_CONTRACT()).to.be.equal(nexus.address);
+      await expect(await withdraw.NEXUS_CONTRACT()).to.be.equal(await nexus.getAddress());
     });
     it("should change staking limit", async function () {
       await expect(
@@ -92,18 +93,4 @@ describe("registration test", function () {
       ).to.be.equal(20);
     });
   });
-  describe("Validator Management", function () {
-    const validators:Validat = []
-    const validator_shares = []
-    before(async function () {
-      await user1.sendTransaction({
-        to: bridgeContract.address,
-        value: ethers.utils.parseEther("2000"),
-      });
-    });
-    it("should deposit validator to bridge", async function () {
-      
-      await 
-    });
-  })
 });

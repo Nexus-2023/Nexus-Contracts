@@ -1,6 +1,8 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 import {INexusBridge} from "./interfaces/INexusBridge.sol";
+import {IDepositContract} from "./interfaces/IDepositContract.sol";
+import {INexusInterface} from "./interfaces/INexusInterface.sol";
 
 /**
  * @title Nexus Bridge Contract
@@ -11,13 +13,13 @@ import {INexusBridge} from "./interfaces/INexusBridge.sol";
  * The staking ratio is maintained by the Nexus Contract and is set during the registration.It
  * can be changed anytime by rollup while doing a transaction to the Nexus Contract.
  */
-abstract contract NexusBridge is INexusBridge{
+abstract contract NexusBridge is INexusBridge {
     // To be changed to the respective network addresses:
     address public constant DEPOSIT_CONTRACT =
         0xff50ed3d0ec03aC01D4C79aAd74928BFF48a7b2b;
     uint256 public constant VALIDATOR_DEPOSIT = 32 ether;
-    address public NEXUS_NETWORK =
-        0x29030F72EB50dECf3d8eb86Ce58256a3e8f85253;
+    uint256 public constant BASIS_POINT = 10000;
+    address public NEXUS_NETWORK = 0x29030F72EB50dECf3d8eb86Ce58256a3e8f85253;
     address public withdrawalCrendentails;
 
     error NotNexus();
@@ -25,6 +27,7 @@ abstract contract NexusBridge is INexusBridge{
     error ValidatorDepositFailed();
     error WithdrawalAddressExists();
     error IncorrectWithdrawalCredentials();
+    error StakingLimitExceeding();
 
     event ValidatorExitReceived(uint256 amount);
 
@@ -39,36 +42,47 @@ abstract contract NexusBridge is INexusBridge{
         _;
     }
 
-    function setWithdrawal(address _withdrawalCredentials) external onlyNexus {
+    function setWithdrawal(address _withdrawalCredentials) external override onlyNexus {
         if (withdrawalCrendentails != address(0))
             revert WithdrawalAddressExists();
         withdrawalCrendentails = _withdrawalCredentials;
     }
 
-    function depositValidator(
-        bytes calldata pubkey,
-        bytes calldata withdrawalCredential,
-        bytes calldata signature,
-        bytes32 depositRoot
+    function depositValidatorNexus(
+        INexusInterface.Validator[] calldata _validators,
+        uint256 stakingLimit,
+        uint256 validatorCount
     ) external override onlyNexus {
-        // if (keccak256(abi.encodePacked(withdrawal_credential)) != keccak256(abi.encodePacked(WITHDRAWAL_CREDENTAILS))) revert IncorrectWithdrawalCredentials();
-        (bool success, bytes memory data) = DEPOSIT_CONTRACT.call{
-            value: VALIDATOR_DEPOSIT
-        }(
-            abi.encodeWithSignature(
-                "deposit(bytes,bytes,bytes,bytes32)",
-                pubkey,
-                withdrawalCredential,
-                signature,
-                depositRoot
-            )
-        );
-        if (!success) {
-            revert ValidatorDepositFailed();
+        for (uint i = 0; i < _validators.length; i++) {
+            bytes memory withdrawalFromCred = _validators[i]
+                .withdrawalAddress[12:];
+            if (
+                keccak256(withdrawalFromCred) !=
+                keccak256(abi.encodePacked(withdrawalCrendentails))
+            ) revert IncorrectWithdrawalCredentials();
+        }
+        if (
+            (((validatorCount + _validators.length) *
+                (VALIDATOR_DEPOSIT) *
+                BASIS_POINT) /
+                (address(this).balance +
+                    (validatorCount + _validators.length) *
+                    (VALIDATOR_DEPOSIT))) > stakingLimit
+        ) revert StakingLimitExceeding();
+
+        for (uint i = 0; i < _validators.length; i++) {
+            IDepositContract(DEPOSIT_CONTRACT).deposit{
+                value: VALIDATOR_DEPOSIT
+            }(
+                _validators[i].pubKey,
+                _validators[i].withdrawalAddress,
+                _validators[i].signature,
+                _validators[i].depositRoot
+            );
         }
     }
 
-    function validatorExit() external override payable onlyWithdrawal {
+    function validatorExit() external payable override onlyWithdrawal {
         emit ValidatorExitReceived(msg.value);
     }
 }

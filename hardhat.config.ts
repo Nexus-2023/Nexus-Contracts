@@ -1,11 +1,12 @@
 import * as dotenv from "dotenv";
 
-import { HardhatUserConfig, task } from "hardhat/config";
+import { HardhatUserConfig } from "hardhat/types";
+import { task } from "hardhat/config";
 import "@nomiclabs/hardhat-etherscan";
-import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
+import "@nomicfoundation/hardhat-chai-matchers";
 
 dotenv.config();
 
@@ -36,6 +37,10 @@ const config: HardhatUserConfig = {
       },
     ],
   },
+  typechain: {
+    outDir: "typechain",
+    target: "ethers-v6",
+  },
   networks: {
     goerli: {
       url: process.env.GOERLI_URL || "",
@@ -43,6 +48,11 @@ const config: HardhatUserConfig = {
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
     hardhat: {
+      chainId: 5,
+      // mining: {
+      //   auto: false,
+      //   interval: [3000, 6000],
+      // },
       forking: {
         enabled: true,
         url: process.env.GOERLI_URL || "",

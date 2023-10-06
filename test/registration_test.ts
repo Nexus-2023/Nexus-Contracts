@@ -11,7 +11,8 @@ describe("registration test", function () {
     withdraw: Withdraw,
     nexusProxy: Proxy;
   before(async function () {
-    [owner, rollupAdmin, user1] = await ethers.getSigners();
+    [rollupAdmin, user1] = await ethers.getSigners();
+    owner = await ethers.getImpersonatedSigner("0xBEfBf15cac02B1cB30dADb1AA4CfA181E26DBfA1")
     console.log("owner address", await owner.getAddress());
     console.log("rollup admin address", await rollupAdmin.getAddress());
     console.log("user address", await user1.getAddress());
@@ -38,10 +39,10 @@ describe("registration test", function () {
         nexus
           .connect(user1)
           .whitelistRollup("nexus", await rollupAdmin.getAddress())
-      ).to.be.revertedWithCustomError(nexus,"NotOwner");
+      ).to.be.revertedWithCustomError(nexus, "NotOwner");
       await expect(
         nexus.whitelistRollup("nexus", await rollupAdmin.getAddress())
-      ).to.be.revertedWithCustomError(nexus,"AddressAlreadyWhitelisted");
+      ).to.be.revertedWithCustomError(nexus, "AddressAlreadyWhitelisted");
     });
     it("should register rollup", async function () {
       // await nexus.whitelistRollup("nexus", await rollupAdmin.getAddress());
@@ -50,16 +51,15 @@ describe("registration test", function () {
         .registerRollup(
           await bridgeContract.getAddress(),
           1,
-          10,
-          await rollupAdmin.getAddress()
+          1000
         );
 
-      const Withdraw = await ethers.getContractFactory("Withdraw");
-      withdraw = await Withdraw.attach(
-        (
-          await nexus.rollups(await rollupAdmin.getAddress())
-        ).withdrawalAddress
-      );
+      // const Withdraw = await ethers.getContractFactory("Withdraw");
+      // withdraw = await Withdraw.attach(
+      //   (
+      //     await nexus.rollups(await rollupAdmin.getAddress())
+      //   ).withdrawalAddress
+      // );
 
       await expect(
         nexus
@@ -67,30 +67,29 @@ describe("registration test", function () {
           .registerRollup(
             await bridgeContract.getAddress(),
             1,
-            10,
-            await rollupAdmin.getAddress()
+            1000
           )
-      ).to.be.revertedWithCustomError(nexus,"AddressNotWhitelisted");
+      ).to.be.revertedWithCustomError(nexus, "AddressNotWhitelisted");
     });
-    it("deployed withdrawal contract should have correct params", async function () {
-      await expect(await withdraw.DAO_ADDRESS()).to.be.equal(
-        await rollupAdmin.getAddress()
-      );
-      await expect(await withdraw.nexusShare()).to.be.equal(1000);
-      await expect(await withdraw.NEXUS_CONTRACT()).to.be.equal(await nexus.getAddress());
-    });
+    // it("deployed withdrawal contract should have correct params", async function () {
+    //   await expect(await withdraw.DAO_ADDRESS()).to.be.equal(
+    //     await rollupAdmin.getAddress()
+    //   );
+    //   await expect(await withdraw.nexusShare()).to.be.equal(1000);
+    //   await expect(await withdraw.NEXUS_CONTRACT()).to.be.equal(await nexus.getAddress());
+    // });
     it("should change staking limit", async function () {
       await expect(
         (
           await nexus.rollups(await rollupAdmin.getAddress())
         ).stakingLimit
-      ).to.be.equal(10);
-      await nexus.connect(rollupAdmin).changeStakingLimit(20);
+      ).to.be.equal(1000);
+      await nexus.connect(rollupAdmin).changeStakingLimit(2000);
       await expect(
         (
           await nexus.rollups(await rollupAdmin.getAddress())
         ).stakingLimit
-      ).to.be.equal(20);
+      ).to.be.equal(2000);
     });
   });
 });

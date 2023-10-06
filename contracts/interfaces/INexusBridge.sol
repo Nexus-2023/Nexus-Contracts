@@ -4,9 +4,21 @@ pragma solidity ^0.8.19;
 import {INexusInterface} from "./INexusInterface.sol";
 
 interface INexusBridge {
-    function setWithdrawal(address withdrawalCredential) external;
+    struct Rewards {
+        uint256 TotalRewardsEarned;
+        uint256 RewardsRedeemed;
+        uint256 Slashing;
+    }
 
-    function validatorExit() external payable;
+    error NotNexus();
+    error NotDAO();
+    error IncorrectAmount();
+    error IncorrectWithdrawalCredentials();
+    error StakingLimitExceeding();
+    error WrongRewardAmount();
+
+    event RewardsUpdated(uint256 amount, bool slashing);
+    event RewardsRedeemed(uint256 amount, address rewardReceiver);
 
     function depositValidatorNexus(
         INexusInterface.Validator[] calldata _validators,

@@ -8,7 +8,7 @@ import {Proxiable} from "./utils/UUPSUpgreadable.sol";
 import {ISSVNetworkCore} from "./interfaces/ISSVNetwork.sol";
 import {INexusInterface} from "./interfaces/INexusInterface.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
+import {BytesArrayLibrary} from "./libraries/BytesArrayLibrary.sol";
 
 /**
  * @title Nexus Core Contract
@@ -21,18 +21,22 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * 6. Recharge funds in SSV contract for validator operation
  * 7. Reward distribution for rollup to DAO and Nexus Fee Contract
  */
-contract Nexus is INexusInterface,Ownable,Proxiable{
+contract Nexus is INexusInterface, Ownable, Proxiable {
     using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableSet for EnumerableSet.UintSet;
+    using BytesArrayLibrary for bytes[];
 
     EnumerableSet.AddressSet private whitelistedRollups;
     address public offChainBot;
     mapping(address => Rollup) public rollups;
     mapping(uint32 => uint32[]) public operatorClusters;
+    bytes[] public depositingPubkeys;
 
     // change these addresses to mainnet address when deploying on mainnet
-    address private constant SSV_NETWORK=0xC3CD9A0aE89Fff83b71b58b6512D43F8a41f363D;
-    address private constant SSV_TOKEN=0x3a9f01091C446bdE031E39ea8354647AFef091E7;
+    address private constant SSV_NETWORK =
+        0xC3CD9A0aE89Fff83b71b58b6512D43F8a41f363D;
+    address private constant SSV_TOKEN =
+        0x3a9f01091C446bdE031E39ea8354647AFef091E7;
 
     modifier onlyOffChainBot() {
         if (msg.sender != offChainBot) revert NotNexusBot();
@@ -45,64 +49,86 @@ contract Nexus is INexusInterface,Ownable,Proxiable{
         _;
     }
 
-    function initialize() public initilizeOnce{
+    function initialize() public initilizeOnce {
         _ownableInit(msg.sender);
     }
 
-    function isRollupWhitelisted(address rollupAddress) external view returns(bool){
+    function isRollupWhitelisted(
+        address rollupAddress
+    ) external view returns (bool) {
         return whitelistedRollups.contains(rollupAddress);
     }
 
-    function updateProxy(address newImplemetation) public onlyOwner{
+    function updateProxy(address newImplemetation) public onlyOwner {
         updateCodeAddress(newImplemetation);
     }
 
     function registerRollup(
         address bridgeContract,
         uint32 operatorCluster,
-        uint16 stakingLimit,
-        address daoAddress
+        uint16 stakingLimit
     ) external onlyWhitelistedRollup {
         if (rollups[msg.sender].bridgeContract != address(0))
             revert RollupAlreadyRegistered();
-        Withdraw withdrawalContract = new Withdraw(daoAddress, 1000);
         rollups[msg.sender] = Rollup(
             bridgeContract,
             stakingLimit,
-            address(withdrawalContract),
             0,
             operatorCluster
         );
-        INexusBridge(bridgeContract).setWithdrawal(address(withdrawalContract));
-        emit RollupRegistered(msg.sender,address(withdrawalContract));
+        emit RollupRegistered(msg.sender,bridgeContract);
     }
 
     function changeStakingLimit(
         uint16 newStakingLimit
     ) external onlyWhitelistedRollup {
-        emit StakingLimitChanged(msg.sender,
+        rollups[msg.sender].stakingLimit = newStakingLimit;
+        emit StakingLimitChanged(
+            msg.sender,
             rollups[msg.sender].stakingLimit,
             newStakingLimit
         );
-        rollups[msg.sender].stakingLimit = newStakingLimit;
     }
 
     function setOffChainBot(address _botAddress) external onlyOwner {
         offChainBot = _botAddress;
     }
 
-    function depositValidatorRollup(address _rollupAdmin,Validator[] calldata _validators) external override onlyOffChainBot {
-        INexusBridge(rollups[_rollupAdmin].bridgeContract).depositValidatorNexus(_validators,uint256(rollups[_rollupAdmin].stakingLimit),uint256(rollups[_rollupAdmin].validatorCount));
+    function depositValidatorRollup(
+        address _rollupAdmin,
+        Validator[] calldata _validators
+    ) external override onlyOffChainBot {
+        INexusBridge(rollups[_rollupAdmin].bridgeContract)
+            .depositValidatorNexus(
+                _validators,
+                uint256(rollups[_rollupAdmin].stakingLimit),
+                uint256(rollups[_rollupAdmin].validatorCount)
+            );
         rollups[_rollupAdmin].validatorCount += uint64(_validators.length);
+        for (uint i = 0; i < _validators.length; i++) {
+            depositingPubkeys.addElement(_validators[i].pubKey);
+        }
         emit ValidatorSubmitted(_validators, _rollupAdmin);
     }
 
-    function depositValidatorShares(address _rollupAdmin,ValidatorShares[] calldata _validatorShares) external override onlyOffChainBot {
-        for (uint i=0;i<_validatorShares.length;i++){
-            IERC20(SSV_TOKEN).approve(SSV_NETWORK,_validatorShares[i].amount);
-            ISSVNetworkCore(SSV_NETWORK).registerValidator(_validatorShares[i].pubKey, _validatorShares[i].operatorIds, _validatorShares[i].sharesEncrypted, _validatorShares[i].amount, _validatorShares[i].cluster);
-            emit ValidatorShareSubmitted(_validatorShares[i].pubKey, _rollupAdmin);
-        }
+    function depositValidatorShares(
+        address _rollupAdmin,
+        ValidatorShares calldata _validatorShare
+    ) external override onlyOffChainBot {
+        (bool key_present, uint256 index) = depositingPubkeys.findElement(
+            _validatorShare.pubKey
+        );
+        if (!key_present) revert KeyNotDeposited();
+        IERC20(SSV_TOKEN).approve(SSV_NETWORK, _validatorShare.amount);
+        ISSVNetworkCore(SSV_NETWORK).registerValidator(
+            _validatorShare.pubKey,
+            _validatorShare.operatorIds,
+            _validatorShare.sharesEncrypted,
+            _validatorShare.amount,
+            _validatorShare.cluster
+        );
+        depositingPubkeys.removeElement(_validatorShare.pubKey);
+        emit ValidatorShareSubmitted(_validatorShare.pubKey, _rollupAdmin);
     }
 
     function whitelistRollup(

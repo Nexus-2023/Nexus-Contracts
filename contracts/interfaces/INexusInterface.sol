@@ -6,7 +6,6 @@ interface INexusInterface {
     struct Rollup {
         address bridgeContract;
         uint16 stakingLimit;
-        address withdrawalAddress;
         uint64 validatorCount;
         uint32 operatorCluster;
     }
@@ -29,6 +28,7 @@ interface INexusInterface {
     error AddressNotWhitelisted();
     error RollupAlreadyPresent();
     error RollupAlreadyRegistered();
+    error KeyNotDeposited();
 
     event RollupWhitelisted(string name, address rollupAddress);
     event RollupRegistered(address rollupAdmin,address withdrawalAddress);
@@ -37,5 +37,5 @@ interface INexusInterface {
     event ValidatorShareSubmitted(bytes pubKey, address rolupAdmin);
 
     function depositValidatorRollup(address _rollupAdmin,Validator[] calldata _validators) external;
-    function depositValidatorShares(address _rollupAdmin,ValidatorShares[] calldata _validatorShares) external;
+    function depositValidatorShares(address _rollupAdmin,ValidatorShares calldata _validatorShare) external;
 }

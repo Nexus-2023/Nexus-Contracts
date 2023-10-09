@@ -35,6 +35,7 @@ interface INexusInterface {
     event StakingLimitChanged(address rollupAdmin,uint16 oldStakingLimit, uint16 newStakingLimit);
     event ValidatorSubmitted(Validator[] validators, address rolupAdmin);
     event ValidatorShareSubmitted(bytes pubKey, address rolupAdmin);
+    event ClusterAdded(uint32 clusterId,uint32[] operatorIds);
 
     function depositValidatorRollup(address _rollupAdmin,Validator[] calldata _validators) external;
     function depositValidatorShares(address _rollupAdmin,ValidatorShares calldata _validatorShare) external;

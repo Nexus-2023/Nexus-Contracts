@@ -23,7 +23,6 @@ abstract contract NexusBridge is INexusBridge {
     uint256 public constant BASIS_POINT = 10000;
     address public NEXUS_NETWORK = 0x59D3fB7123cE7f7226a3C2D3e47093B82359aBCD;
     Rewards public stakingReturns;
-    uint256 private validatorCount;
     uint256 private lastRewardUpdationTime;
 
     modifier onlyNexus() {
@@ -68,11 +67,19 @@ abstract contract NexusBridge is INexusBridge {
                 _validators[i].depositRoot
             );
         }
-        validatorCount+=_validators.length;
+        validatorCount += _validators.length;
     }
 
-    function updateRewards(uint256 amount, bool slashed) external onlyNexus {
-        if (!slashed && amount < validatorCount*(32 ether)*(block.timestamp - lastRewardUpdationTime)*10/31556952*100) revert WrongRewardAmount();
+    function updateRewards(uint256 amount, bool slashed,uint256 validatorCount) external onlyNexus {
+        if (
+            !slashed &&
+            amount <
+            ((validatorCount *
+                (32 ether) *
+                (block.timestamp - lastRewardUpdationTime) *
+                10) / 31556952) *
+                100
+        ) revert WrongRewardAmount();
         if (slashed) {
             stakingReturns.Slashing += amount;
         } else {
@@ -93,7 +100,7 @@ abstract contract NexusBridge is INexusBridge {
             value: amount,
             gas: 5000
         }("");
-        stakingReturns.RewardsRedeemed -= amount;
+        stakingReturns.RewardsRedeemed += amount;
         if (success) {
             emit RewardsRedeemed(amount, toWallet);
         }

@@ -91,5 +91,11 @@ describe("registration test", function () {
         ).stakingLimit
       ).to.be.equal(2000);
     });
+    it("should add cluster", async function () {
+      const cluster = [1,5,7,11];
+      await nexus.addCluster(cluster,1)
+      await expect(nexus.connect(user1).addCluster(cluster,1)).to.be.revertedWithCustomError(nexus, "NotOwner")
+      console.log(await nexus.getCluster(1));
+    })
   });
 });

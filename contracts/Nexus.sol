@@ -29,7 +29,7 @@ contract Nexus is INexusInterface, Ownable, Proxiable {
     EnumerableSet.AddressSet private whitelistedRollups;
     address public offChainBot;
     mapping(address => Rollup) public rollups;
-    mapping(uint32 => uint32[]) public operatorClusters;
+    mapping(uint32 => uint32[]) private operatorClusters;
     bytes[] public depositingPubkeys;
 
     // change these addresses to mainnet address when deploying on mainnet
@@ -76,7 +76,7 @@ contract Nexus is INexusInterface, Ownable, Proxiable {
             0,
             operatorCluster
         );
-        emit RollupRegistered(msg.sender,bridgeContract);
+        emit RollupRegistered(msg.sender, bridgeContract);
     }
 
     function changeStakingLimit(
@@ -143,4 +143,17 @@ contract Nexus is INexusInterface, Ownable, Proxiable {
             revert RollupAlreadyPresent();
         }
     }
+
+    function addCluster(
+        uint32[] calldata operatorIds,
+        uint32 clusterId
+    ) external onlyOwner {
+        operatorClusters[clusterId] = operatorIds;
+        emit ClusterAdded(clusterId, operatorIds);
+    }
+
+    function getCluster(uint32 clusterId) external view returns(uint32[] memory){
+        return operatorClusters[clusterId];
+    }
+
 }

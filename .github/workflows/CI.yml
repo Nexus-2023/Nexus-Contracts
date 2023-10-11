@@ -39,4 +39,4 @@ jobs:
         with:
           default_author: RohitAudit
           message: 'CI: Generated ABIs'
-          add: 'abis/*'
+          add: 'contract_abi/*'

@@ -70,7 +70,7 @@ abstract contract NexusBridge is INexusBridge {
         validatorCount += _validators.length;
     }
 
-    function updateRewards(uint256 amount, bool slashed,uint256 validatorCount) external onlyNexus {
+    function updateRewards(uint256 amount, bool slashed,uint256 validatorCount) external override onlyNexus {
         if (
             !slashed &&
             amount <

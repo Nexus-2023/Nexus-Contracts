@@ -46,6 +46,15 @@ describe("registration test", function () {
     });
     it("should register rollup", async function () {
       // await nexus.whitelistRollup("nexus", await rollupAdmin.getAddress());
+      const BridgeContract_2 = await ethers.getContractFactory("BridgeContract");
+      const bridgeContract_wrong = await BridgeContract_2.deploy(await user1.getAddress());
+      await expect(nexus
+        .connect(rollupAdmin)
+        .registerRollup(
+          await bridgeContract_wrong.getAddress(),
+          1,
+          1000
+        )).to.be.revertedWithCustomError(nexus,"NexusAddressNotFound");
       await nexus
         .connect(rollupAdmin)
         .registerRollup(
@@ -53,7 +62,15 @@ describe("registration test", function () {
           1,
           1000
         );
-
+      await expect(nexus
+        .connect(rollupAdmin)
+        .registerRollup(
+          await bridgeContract.getAddress(),
+          1,
+          1000
+        )).to.be.revertedWithCustomError(nexus,"RollupAlreadyRegistered");
+      const BridgeContract = await ethers.getContractFactory("BridgeContract");
+      bridgeContract = await BridgeContract.deploy(await nexusProxy.getAddress());
       // const Withdraw = await ethers.getContractFactory("Withdraw");
       // withdraw = await Withdraw.attach(
       //   (
@@ -95,7 +112,15 @@ describe("registration test", function () {
       const cluster = [1,5,7,11];
       await nexus.addCluster(cluster,1)
       await expect(nexus.connect(user1).addCluster(cluster,1)).to.be.revertedWithCustomError(nexus, "NotOwner")
-      console.log(await nexus.getCluster(1));
-    })
+      await expect((await nexus.getCluster(1)).toString()).to.be.equal(cluster.toString());
+    });
+    it("should send SSV to nexus Contract", async function (){
+      const SSVToken = await ethers.getContractFactory("SSVToken");
+      const ssv = await SSVToken.attach("0x3a9f01091C446bdE031E39ea8354647AFef091E7");
+      const tokenHolder = await ethers.getImpersonatedSigner("0x929C3Ed3D1788C4862E6b865E0E02500DB8Fd760");
+      await ssv.connect(tokenHolder).approve(await nexus.getAddress(),ethers.parseEther("1000"));
+      await nexus.connect(tokenHolder).rechargeSSV(ethers.parseEther("1000"));
+      await expect(await ssv.balanceOf(await nexus.getAddress())).to.be.equal(ethers.parseEther("1000"))
+    });
   });
 });

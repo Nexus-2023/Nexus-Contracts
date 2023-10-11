@@ -2,7 +2,6 @@
 pragma solidity 0.8.19;
 
 interface ISSVNetworkCore {
-
     /// @notice Represents a cluster of validators
     struct Cluster {
         /// @dev The number of validators in the cluster
@@ -29,6 +28,16 @@ interface ISSVNetworkCore {
         Cluster memory cluster
     ) external;
 
-    function removeValidator(bytes calldata publicKey, uint64[] memory operatorIds, Cluster memory cluster) external;
+    function removeValidator(
+        bytes calldata publicKey,
+        uint64[] memory operatorIds,
+        Cluster memory cluster
+    ) external;
 
+    function deposit(
+        address clusterOwner,
+        uint64[] calldata operatorIds,
+        uint256 amount,
+        ISSVNetworkCore.Cluster memory cluster
+    ) external;
 }

@@ -25,4 +25,6 @@ interface INexusBridge {
         uint256 stakingLimit,
         uint256 validatorCount
     ) external;
+
+    function updateRewards(uint256 amount, bool slashed,uint256 validatorCount) external;
 }

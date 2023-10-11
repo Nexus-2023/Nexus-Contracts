@@ -7,7 +7,7 @@ interface INexusInterface {
         address bridgeContract;
         uint16 stakingLimit;
         uint64 validatorCount;
-        uint32 operatorCluster;
+        uint64 operatorCluster;
     }
     struct Validator {
         bytes pubKey;
@@ -22,6 +22,11 @@ interface INexusInterface {
         uint256 amount;
         ISSVNetworkCore.Cluster cluster;
     }
+    struct RollupRewardUpdate{
+        address rollupAdmin;
+        uint256 amount;
+        bool slashing;
+    }
 
     error NotNexusBot();
     error AddressAlreadyWhitelisted();
@@ -29,14 +34,30 @@ interface INexusInterface {
     error RollupAlreadyPresent();
     error RollupAlreadyRegistered();
     error KeyNotDeposited();
+    error NexusAddressNotFound();
 
     event RollupWhitelisted(string name, address rollupAddress);
-    event RollupRegistered(address rollupAdmin,address withdrawalAddress);
-    event StakingLimitChanged(address rollupAdmin,uint16 oldStakingLimit, uint16 newStakingLimit);
+    event RollupRegistered(address rollupAdmin, address withdrawalAddress);
+    event StakingLimitChanged(
+        address rollupAdmin,
+        uint16 oldStakingLimit,
+        uint16 newStakingLimit
+    );
     event ValidatorSubmitted(Validator[] validators, address rolupAdmin);
     event ValidatorShareSubmitted(bytes pubKey, address rolupAdmin);
-    event ClusterAdded(uint32 clusterId,uint32[] operatorIds);
+    event ClusterAdded(uint64 clusterId, uint64[] operatorIds);
+    event SSVRecharged(address sender, uint256 amount);
+    event ClusterRecharged(uint64 clusterId,uint256 amount);
+    event RollupRewardsUpdated(address admin,uint256 amount,bool slashing);
 
-    function depositValidatorRollup(address _rollupAdmin,Validator[] calldata _validators) external;
-    function depositValidatorShares(address _rollupAdmin,ValidatorShares calldata _validatorShare) external;
+    function depositValidatorRollup(
+        address _rollupAdmin,
+        Validator[] calldata _validators
+    ) external;
+
+    function depositValidatorShares(
+        address _rollupAdmin,
+        ValidatorShares calldata _validatorShare
+    ) external;
+
 }

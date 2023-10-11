@@ -2,6 +2,7 @@
 pragma solidity ^0.8.19;
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Withdraw} from "./Withdrawal.sol";
+import {NexusBridge} from "./NexusBridge.sol";
 import {INexusBridge} from "./interfaces/INexusBridge.sol";
 import {Ownable} from "./utils/NexusOwnable.sol";
 import {Proxiable} from "./utils/UUPSUpgreadable.sol";
@@ -27,9 +28,9 @@ contract Nexus is INexusInterface, Ownable, Proxiable {
     using BytesArrayLibrary for bytes[];
 
     EnumerableSet.AddressSet private whitelistedRollups;
-    address public offChainBot;
+    address public offChainBot = 0x45a3f77543167c8D0965194879c4e0B0dbB581d0;
     mapping(address => Rollup) public rollups;
-    mapping(uint32 => uint32[]) private operatorClusters;
+    mapping(uint64 => uint64[]) private operatorClusters;
     bytes[] public depositingPubkeys;
 
     // change these addresses to mainnet address when deploying on mainnet
@@ -53,23 +54,45 @@ contract Nexus is INexusInterface, Ownable, Proxiable {
         _ownableInit(msg.sender);
     }
 
-    function isRollupWhitelisted(
+    // admin related functions
+
+    function whitelistRollup(
+        string calldata name,
         address rollupAddress
-    ) external view returns (bool) {
-        return whitelistedRollups.contains(rollupAddress);
+    ) external onlyOwner {
+        if (whitelistedRollups.contains(rollupAddress))
+            revert AddressAlreadyWhitelisted();
+        if (whitelistedRollups.add(rollupAddress)) {
+            emit RollupWhitelisted(name, rollupAddress);
+        } else {
+            revert RollupAlreadyPresent();
+        }
+    }
+
+    function setOffChainBot(address _botAddress) external onlyOwner {
+        offChainBot = _botAddress;
     }
 
     function updateProxy(address newImplemetation) public onlyOwner {
         updateCodeAddress(newImplemetation);
     }
 
+    // rollup related functions
+
+    function isRollupWhitelisted(
+        address rollupAddress
+    ) external view returns (bool) {
+        return whitelistedRollups.contains(rollupAddress);
+    }
+
     function registerRollup(
         address bridgeContract,
         uint32 operatorCluster,
         uint16 stakingLimit
-    ) external onlyWhitelistedRollup {
+    ) external {
         if (rollups[msg.sender].bridgeContract != address(0))
             revert RollupAlreadyRegistered();
+        if (NexusBridge(bridgeContract).NEXUS_NETWORK()!=address(this)) revert NexusAddressNotFound();
         rollups[msg.sender] = Rollup(
             bridgeContract,
             stakingLimit,
@@ -90,9 +113,8 @@ contract Nexus is INexusInterface, Ownable, Proxiable {
         );
     }
 
-    function setOffChainBot(address _botAddress) external onlyOwner {
-        offChainBot = _botAddress;
-    }
+
+    // validator realted function
 
     function depositValidatorRollup(
         address _rollupAdmin,
@@ -131,29 +153,34 @@ contract Nexus is INexusInterface, Ownable, Proxiable {
         emit ValidatorShareSubmitted(_validatorShare.pubKey, _rollupAdmin);
     }
 
-    function whitelistRollup(
-        string calldata name,
-        address rollupAddress
-    ) external onlyOwner {
-        if (whitelistedRollups.contains(rollupAddress))
-            revert AddressAlreadyWhitelisted();
-        if (whitelistedRollups.add(rollupAddress)) {
-            emit RollupWhitelisted(name, rollupAddress);
-        } else {
-            revert RollupAlreadyPresent();
+    function updateBridgeRewards(RollupRewardUpdate[] memory rewards) external onlyOffChainBot{
+        for (uint256 i=0;i<rewards.length;i++){
+            INexusBridge(rollups[rewards[i].rollupAdmin].bridgeContract).updateRewards(rewards[i].amount,rewards[i].slashing,rollups[rewards[i].rollupAdmin].validatorCount);
+            emit RollupRewardsUpdated(rewards[i].rollupAdmin,rewards[i].amount,rewards[i].slashing);
         }
     }
 
+    // cluster related functions
+
     function addCluster(
-        uint32[] calldata operatorIds,
-        uint32 clusterId
+        uint64[] calldata operatorIds,
+        uint64 clusterId
     ) external onlyOwner {
         operatorClusters[clusterId] = operatorIds;
         emit ClusterAdded(clusterId, operatorIds);
     }
 
-    function getCluster(uint32 clusterId) external view returns(uint32[] memory){
+    function getCluster(uint64 clusterId) external view returns(uint64[] memory){
         return operatorClusters[clusterId];
     }
 
+    function rechargeSSV(uint256 amount) external {
+        IERC20(SSV_TOKEN).transferFrom(msg.sender, address(this), amount);
+        emit SSVRecharged(msg.sender,amount);
+    }
+
+    function rechargeCluster(uint64 clusterId, uint256 amount,ISSVNetworkCore.Cluster memory cluster) external onlyOffChainBot{
+        ISSVNetworkCore(SSV_NETWORK).deposit(address(this),operatorClusters[clusterId],amount,cluster);
+        emit ClusterRecharged(clusterId,amount);
+    }
 }

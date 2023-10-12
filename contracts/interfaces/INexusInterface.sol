@@ -35,6 +35,7 @@ interface INexusInterface {
     error RollupAlreadyRegistered();
     error KeyNotDeposited();
     error NexusAddressNotFound();
+    error InvalidKeySupplied();
 
     event RollupWhitelisted(string name, address rollupAddress);
     event RollupRegistered(address rollupAdmin, address withdrawalAddress);
@@ -49,6 +50,7 @@ interface INexusInterface {
     event SSVRecharged(address sender, uint256 amount);
     event ClusterRecharged(uint64 clusterId,uint256 amount);
     event RollupRewardsUpdated(address admin,uint256 amount,bool slashing);
+    event ValidatorExited(address admin,bytes[] publicKeys);
 
     function depositValidatorRollup(
         address _rollupAdmin,

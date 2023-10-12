@@ -32,6 +32,7 @@ contract Nexus is INexusInterface, Ownable, Proxiable {
     mapping(address => Rollup) public rollups;
     mapping(uint64 => uint64[]) private operatorClusters;
     bytes[] public depositingPubkeys;
+    bytes[] public activePubkeys;
 
     // change these addresses to mainnet address when deploying on mainnet
     address private constant SSV_NETWORK =
@@ -150,6 +151,7 @@ contract Nexus is INexusInterface, Ownable, Proxiable {
             _validatorShare.cluster
         );
         depositingPubkeys.removeElement(_validatorShare.pubKey);
+        activePubkeys.addElement(_validatorShare.pubKey);
         emit ValidatorShareSubmitted(_validatorShare.pubKey, _rollupAdmin);
     }
 
@@ -158,6 +160,19 @@ contract Nexus is INexusInterface, Ownable, Proxiable {
             INexusBridge(rollups[rewards[i].rollupAdmin].bridgeContract).updateRewards(rewards[i].amount,rewards[i].slashing,rollups[rewards[i].rollupAdmin].validatorCount);
             emit RollupRewardsUpdated(rewards[i].rollupAdmin,rewards[i].amount,rewards[i].slashing);
         }
+    }
+
+    function validatorExit(address rollupAdmin,bytes[] calldata pubkey) external onlyOffChainBot{
+        for(uint i=0;i<pubkey.length;i++){
+            (bool key_present, uint256 index) = activePubkeys.findElement(pubkey[i]);
+            if (key_present){
+                activePubkeys.removeElement(pubkey[i]);
+            }else{
+                revert InvalidKeySupplied();
+            }
+        }
+        rollups[rollupAdmin].validatorCount -= uint64(pubkey.length);
+        emit ValidatorExited(rollupAdmin,pubkey);
     }
 
     // cluster related functions

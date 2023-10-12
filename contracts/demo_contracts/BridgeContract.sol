@@ -8,7 +8,12 @@ contract BridgeContract is NexusBridge {
     constructor(address _nexus){
         NEXUS_NETWORK = _nexus;
     }
+
     receive() external payable {
         emit EthReceived(msg.value);
+    }
+
+    function withdraw(uint256 amount) external payable {
+        (bool success, bytes memory data) = msg.sender.call{value:amount,gas:5000}("");
     }
 }

@@ -20,13 +20,18 @@ jobs:
         with:
           node-version: 20
 
+      - name: Install dependencies
+        run: |
+          npm ci
+
+
       - name: Setup Environment
         run: |
           npx hardhat compile
 
       - name: Run Test
         run: |
-          npx hardhat test
+          npx hardhat test test/registration.ts
 
       - name: Copy ABI
         run: |

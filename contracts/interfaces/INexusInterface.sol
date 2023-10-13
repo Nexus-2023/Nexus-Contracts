@@ -38,19 +38,19 @@ interface INexusInterface {
     error InvalidKeySupplied();
 
     event RollupWhitelisted(string name, address rollupAddress);
-    event RollupRegistered(address rollupAdmin, address withdrawalAddress);
+    event RollupRegistered(address rollupAdmin, address withdrawalAddress,uint16 stakingLimit,uint32 operatorCluster);
     event StakingLimitChanged(
         address rollupAdmin,
         uint16 oldStakingLimit,
         uint16 newStakingLimit
     );
-    event ValidatorSubmitted(Validator[] validators, address rolupAdmin);
-    event ValidatorShareSubmitted(bytes pubKey, address rolupAdmin);
+    event ValidatorSubmitted(bytes pubKey, address rolupAdmin);
+    event ValidatorShareSubmitted(bytes pubKey, address rolupAdmin,uint256 amount);
     event ClusterAdded(uint64 clusterId, uint64[] operatorIds);
     event SSVRecharged(address sender, uint256 amount);
     event ClusterRecharged(uint64 clusterId,uint256 amount);
     event RollupRewardsUpdated(address admin,uint256 amount,bool slashing);
-    event ValidatorExited(address admin,bytes[] publicKeys);
+    event ValidatorExited(address admin,bytes pubKey);
 
     function depositValidatorRollup(
         address _rollupAdmin,

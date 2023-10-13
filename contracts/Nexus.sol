@@ -100,7 +100,7 @@ contract Nexus is INexusInterface, Ownable, Proxiable {
             0,
             operatorCluster
         );
-        emit RollupRegistered(msg.sender, bridgeContract);
+        emit RollupRegistered(msg.sender, bridgeContract,stakingLimit,operatorCluster);
     }
 
     function changeStakingLimit(
@@ -130,8 +130,9 @@ contract Nexus is INexusInterface, Ownable, Proxiable {
         rollups[_rollupAdmin].validatorCount += uint64(_validators.length);
         for (uint i = 0; i < _validators.length; i++) {
             depositingPubkeys.addElement(_validators[i].pubKey);
+            emit ValidatorSubmitted(_validators[i].pubKey, _rollupAdmin);
         }
-        emit ValidatorSubmitted(_validators, _rollupAdmin);
+
     }
 
     function depositValidatorShares(
@@ -152,7 +153,7 @@ contract Nexus is INexusInterface, Ownable, Proxiable {
         );
         depositingPubkeys.removeElement(_validatorShare.pubKey);
         activePubkeys.addElement(_validatorShare.pubKey);
-        emit ValidatorShareSubmitted(_validatorShare.pubKey, _rollupAdmin);
+        emit ValidatorShareSubmitted(_validatorShare.pubKey, _rollupAdmin,_validatorShare.amount);
     }
 
     function updateBridgeRewards(RollupRewardUpdate[] memory rewards) external onlyOffChainBot{
@@ -167,12 +168,12 @@ contract Nexus is INexusInterface, Ownable, Proxiable {
             (bool key_present, uint256 index) = activePubkeys.findElement(pubkey[i]);
             if (key_present){
                 activePubkeys.removeElement(pubkey[i]);
+                emit ValidatorExited(rollupAdmin,pubkey[i]);
             }else{
                 revert InvalidKeySupplied();
             }
         }
         rollups[rollupAdmin].validatorCount -= uint64(pubkey.length);
-        emit ValidatorExited(rollupAdmin,pubkey);
     }
 
     // cluster related functions

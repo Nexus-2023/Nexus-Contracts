@@ -17,35 +17,22 @@ abstract contract NexusBridge is INexusBridge {
     // To be changed to the respective network addresses:
     address public constant DEPOSIT_CONTRACT =
         0xff50ed3d0ec03aC01D4C79aAd74928BFF48a7b2b;
+    // to be changed rollup DAO
+    address public DAO = 0xff50ed3d0ec03aC01D4C79aAd74928BFF48a7b2b;
     uint256 public constant VALIDATOR_DEPOSIT = 32 ether;
     uint256 public constant BASIS_POINT = 10000;
-    address public NEXUS_NETWORK = 0x29030F72EB50dECf3d8eb86Ce58256a3e8f85253;
-    address public withdrawalCrendentails;
-
-    error NotNexus();
-    error IncorrectWithdrawalAddress();
-    error ValidatorDepositFailed();
-    error WithdrawalAddressExists();
-    error IncorrectWithdrawalCredentials();
-    error StakingLimitExceeding();
-
-    event ValidatorExitReceived(uint256 amount);
+    address public NEXUS_NETWORK = 0x59D3fB7123cE7f7226a3C2D3e47093B82359aBCD;
+    Rewards public stakingReturns;
+    uint256 private lastRewardUpdationTime;
 
     modifier onlyNexus() {
         if (msg.sender != NEXUS_NETWORK) revert NotNexus();
         _;
     }
 
-    modifier onlyWithdrawal() {
-        if (msg.sender != withdrawalCrendentails)
-            revert IncorrectWithdrawalAddress();
+    modifier onlyDAO() {
+        if (msg.sender != DAO) revert NotDAO();
         _;
-    }
-
-    function setWithdrawal(address _withdrawalCredentials) external override onlyNexus {
-        if (withdrawalCrendentails != address(0))
-            revert WithdrawalAddressExists();
-        withdrawalCrendentails = _withdrawalCredentials;
     }
 
     function depositValidatorNexus(
@@ -58,7 +45,7 @@ abstract contract NexusBridge is INexusBridge {
                 .withdrawalAddress[12:];
             if (
                 keccak256(withdrawalFromCred) !=
-                keccak256(abi.encodePacked(withdrawalCrendentails))
+                keccak256(abi.encodePacked(address(this)))
             ) revert IncorrectWithdrawalCredentials();
         }
         if (
@@ -80,9 +67,42 @@ abstract contract NexusBridge is INexusBridge {
                 _validators[i].depositRoot
             );
         }
+        validatorCount += _validators.length;
     }
 
-    function validatorExit() external payable override onlyWithdrawal {
-        emit ValidatorExitReceived(msg.value);
+    function updateRewards(uint256 amount, bool slashed,uint256 validatorCount) external override onlyNexus {
+        if (
+            !slashed &&
+            amount <
+            ((validatorCount *
+                (32 ether) *
+                (block.timestamp - lastRewardUpdationTime) *
+                10) / 31556952) *
+                100
+        ) revert WrongRewardAmount();
+        if (slashed) {
+            stakingReturns.Slashing += amount;
+        } else {
+            stakingReturns.TotalRewardsEarned += amount;
+        }
+        lastRewardUpdationTime = block.timestamp;
+        emit RewardsUpdated(amount, slashed);
+    }
+
+    function redeemRewards(uint256 amount, address toWallet) external onlyDAO {
+        if (
+            amount >
+            (stakingReturns.TotalRewardsEarned -
+                stakingReturns.RewardsRedeemed -
+                stakingReturns.Slashing)
+        ) revert IncorrectAmount();
+        (bool success, bytes memory nexusData) = toWallet.call{
+            value: amount,
+            gas: 5000
+        }("");
+        stakingReturns.RewardsRedeemed += amount;
+        if (success) {
+            emit RewardsRedeemed(amount, toWallet);
+        }
     }
 }

@@ -1,8 +1,21 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
-import {ISSVNetworkCore} from "./ISSVNetwork.sol";
 
 interface INexusInterface {
+
+    struct Cluster {
+        /// @dev The number of validators in the cluster
+        uint32 validatorCount;
+        /// @dev The index of network fees related to this cluster
+        uint64 networkFeeIndex;
+        /// @dev The last index calculated for the cluster
+        uint64 index;
+        /// @dev Flag indicating whether the cluster is active
+        bool active;
+        /// @dev The balance of the cluster
+        uint256 balance;
+    }
+
     struct Rollup {
         address bridgeContract;
         uint16 stakingLimit;
@@ -20,7 +33,7 @@ interface INexusInterface {
         uint64[] operatorIds;
         bytes sharesEncrypted;
         uint256 amount;
-        ISSVNetworkCore.Cluster cluster;
+        Cluster cluster;
     }
     struct RollupRewardUpdate{
         address rollupAdmin;

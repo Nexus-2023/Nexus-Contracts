@@ -2,8 +2,7 @@
 pragma solidity ^0.8.19;
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Withdraw} from "./Withdrawal.sol";
-import {NexusBridge} from "./NexusBridge.sol";
-import {INexusBridge} from "./interfaces/INexusBridge.sol";
+import {NexusBridge} from "./nexus_bridge/NexusBridge.sol";
 import {Ownable} from "./utils/NexusOwnable.sol";
 import {Proxiable} from "./utils/UUPSUpgreadable.sol";
 import {ISSVNetworkCore} from "./interfaces/ISSVNetwork.sol";
@@ -60,7 +59,7 @@ contract Nexus is INexusInterface, Ownable, Proxiable {
     function whitelistRollup(
         string calldata name,
         address rollupAddress
-    ) external onlyOwner {
+    ) external onlyOwner{
         if (whitelistedRollups.contains(rollupAddress))
             revert AddressAlreadyWhitelisted();
         if (whitelistedRollups.add(rollupAddress)) {
@@ -88,9 +87,9 @@ contract Nexus is INexusInterface, Ownable, Proxiable {
 
     function registerRollup(
         address bridgeContract,
-        uint32 operatorCluster,
+        uint64 operatorCluster,
         uint16 stakingLimit
-    ) external {
+    ) external onlyWhitelistedRollup{
         if (rollups[msg.sender].bridgeContract != address(0))
             revert RollupAlreadyRegistered();
         if (NexusBridge(bridgeContract).NEXUS_NETWORK()!=address(this)) revert NexusAddressNotFound();
@@ -121,7 +120,7 @@ contract Nexus is INexusInterface, Ownable, Proxiable {
         address _rollupAdmin,
         Validator[] calldata _validators
     ) external override onlyOffChainBot {
-        INexusBridge(rollups[_rollupAdmin].bridgeContract)
+        NexusBridge(rollups[_rollupAdmin].bridgeContract)
             .depositValidatorNexus(
                 _validators,
                 uint256(rollups[_rollupAdmin].stakingLimit),
@@ -158,7 +157,7 @@ contract Nexus is INexusInterface, Ownable, Proxiable {
 
     function updateBridgeRewards(RollupRewardUpdate[] memory rewards) external onlyOffChainBot{
         for (uint256 i=0;i<rewards.length;i++){
-            INexusBridge(rollups[rewards[i].rollupAdmin].bridgeContract).updateRewards(rewards[i].amount,rewards[i].slashing,rollups[rewards[i].rollupAdmin].validatorCount);
+            NexusBridge(rollups[rewards[i].rollupAdmin].bridgeContract).updateRewards(rewards[i].amount,rewards[i].slashing,rollups[rewards[i].rollupAdmin].validatorCount);
             emit RollupRewardsUpdated(rewards[i].rollupAdmin,rewards[i].amount,rewards[i].slashing);
         }
     }
@@ -182,6 +181,7 @@ contract Nexus is INexusInterface, Ownable, Proxiable {
         uint64[] calldata operatorIds,
         uint64 clusterId
     ) external onlyOwner {
+        if (operatorClusters[clusterId].length == 0) revert ClusterAlreadyExited();
         operatorClusters[clusterId] = operatorIds;
         emit ClusterAdded(clusterId, operatorIds);
     }

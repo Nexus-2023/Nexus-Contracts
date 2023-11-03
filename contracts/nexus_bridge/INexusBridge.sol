@@ -12,13 +12,12 @@ interface INexusBridge {
 
     error NotNexus();
     error NotDAO();
-    error IncorrectAmount();
     error IncorrectWithdrawalCredentials();
     error StakingLimitExceeding();
     error WrongRewardAmount();
 
     event RewardsUpdated(uint256 amount, bool slashing);
-    event RewardsRedeemed(uint256 amount, address rewardReceiver);
+    event RewardsRedeemed(uint256 amount);
 
     function depositValidatorNexus(
         INexusInterface.Validator[] calldata _validators,

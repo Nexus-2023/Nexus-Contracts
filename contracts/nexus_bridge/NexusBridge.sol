@@ -21,7 +21,7 @@ abstract contract NexusBridge is INexusBridge {
     address public constant DAO = 0xff50ed3d0ec03aC01D4C79aAd74928BFF48a7b2b;
     uint256 private constant VALIDATOR_DEPOSIT = 32 ether;
     uint256 private constant BASIS_POINT = 10000;
-    address public NEXUS_NETWORK = 0x59D3fB7123cE7f7226a3C2D3e47093B82359aBCD;
+    address public NEXUS_NETWORK = 0xd1C788Ac548Cb467b3c4B14CF1793BCa3c1dCBEB;
     Rewards public stakingReturns;
     uint256 private lastRewardUpdationTime;
 

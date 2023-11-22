@@ -175,6 +175,12 @@ contract Nexus is INexusInterface, Ownable, Proxiable {
         rollups[rollupAdmin].validatorCount -= uint64(pubkey.length);
     }
 
+    function validatorExitBalanceTransferred(address rollupAdmin,bytes[] calldata pubkey) external onlyOffChainBot{
+        for(uint i=0;i<pubkey.length;i++){
+            emit ValidatorExited(rollupAdmin,pubkey[i]);
+        }
+    }
+
     // cluster related functions
 
     function addCluster(

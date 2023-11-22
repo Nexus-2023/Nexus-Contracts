@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 import {BytesArrayLibrary} from "./libraries/BytesArrayLibrary.sol";
-import {INexusBridge} from "./interfaces/INexusBridge.sol";
+import {INexusBridge} from "./nexus_bridge/INexusBridge.sol";
 
 /**
  * @dev

@@ -1,8 +1,8 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
-import {NexusBridge} from "../NexusBridge.sol";
+import {NexusBridgeDAO} from "../nexus_bridge/NexusBridgeDAO.sol";
 
-contract BridgeContract is NexusBridge {
+contract BridgeContract is NexusBridgeDAO {
     event EthReceived(uint256 amount);
 
     constructor(address _nexus){

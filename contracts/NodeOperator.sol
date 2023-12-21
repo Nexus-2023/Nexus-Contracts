@@ -13,11 +13,11 @@ contract NodeOperator is Ownable, Proxiable, INodeOperator{
         _ownableInit(msg.sender);
     }
 
-    function registerSSVOperator(uint64 _operator_id, string calldata _pub_key, string calldata _ip_address) external onlyOwner{
+    function registerSSVOperator(uint64 _operator_id, string calldata _pub_key, string calldata _ip_address, string calldata name) external onlyOwner{
         bytes memory ip = bytes(ssvDKGIP[_operator_id]);
         if (ip.length != 0) revert OperatorAlreadyRegistered();
         ssvDKGIP[_operator_id] = _ip_address;
-        emit SSVOperatorRegistred(_operator_id,_pub_key,_ip_address);
+        emit SSVOperatorRegistered(name,_operator_id,_pub_key,_ip_address);
     }
 
     function updateSSVOperatorIP(uint64 _operator_id,string calldata _ip_address) external onlyOwner{

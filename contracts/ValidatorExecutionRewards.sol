@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-contract NexusRewards {
+contract ValidatorExecutionRewards {
     struct RollupExecutionReward{
         address rollupAdmin;
         uint256 amount;

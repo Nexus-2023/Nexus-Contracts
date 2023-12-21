@@ -176,11 +176,10 @@ contract Nexus is INexusInterface, Ownable, Proxiable {
         }
     }
 
-    function validatorExitBalanceTransferred(address rollupAdmin,bytes[] calldata pubkey) external onlyOffChainBot{
-        for(uint i=0;i<pubkey.length;i++){
-            emit ValidatorExited(rollupAdmin,pubkey[i]);
-        }
-        INexusBridge(rollups[rollupAdmin].bridgeContract).updateExitedValidators(pubkey.length);
+    function validatorExitBalanceTransferred(address rollupAdmin,bytes calldata pubkey, uint64[] memory operatorIds, ISSVNetworkCore.Cluster memory cluster) external onlyOffChainBot{
+        ISSVNetworkCore(SSV_NETWORK).removeValidator(pubkey, operatorIds, cluster);
+        emit ValidatorExited(rollupAdmin,pubkey);
+        INexusBridge(rollups[rollupAdmin].bridgeContract).updateExitedValidators();
     }
 
     // cluster related functions

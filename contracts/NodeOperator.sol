@@ -40,6 +40,7 @@ contract NodeOperator is Ownable, Proxiable, INodeOperator{
     }
 
     function getCluster(uint64 clusterId) external override view returns(uint64[] memory){
+        if (ssvClusters[clusterId].length == 0) revert ClusterNotPresent();
         return ssvClusters[clusterId];
     }
 }

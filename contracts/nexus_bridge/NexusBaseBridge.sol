@@ -24,12 +24,10 @@ abstract contract NexusBaseBridge is INexusBridge {
     uint256 public NexusFeePercentage;
     // To be changed to the respective network addresses:
     address public constant DEPOSIT_CONTRACT = 0xff50ed3d0ec03aC01D4C79aAd74928BFF48a7b2b;
-    // to be changed rollup DAO
-    address public constant DAO = 0x14630e0428B9BbA12896402257fa09035f9F7447;
+
     uint256 public constant VALIDATOR_DEPOSIT = 32 ether;
     uint256 public constant BASIS_POINT = 10000;
     error NotNexus();
-    error NotDAO();
     error IncorrectWithdrawalCredentials();
     error StakingLimitExceeding();
     error IncorrectNexusFee();
@@ -42,11 +40,6 @@ abstract contract NexusBaseBridge is INexusBridge {
 
     modifier onlyNexus() {
         if (msg.sender != NEXUS_NETWORK) revert NotNexus();
-        _;
-    }
-
-    modifier onlyDAO() {
-        if (msg.sender != DAO) revert NotDAO();
         _;
     }
 

@@ -5,6 +5,7 @@ interface INodeOperator {
     error ClusterAlreadyExited();
     error OperatorNotRegistered();
     error OperatorAlreadyRegistered();
+    error ClusterNotPresent();
     event ClusterAdded(uint64 clusterId, uint64[] operatorIds);
     event SSVOperatorRegistered(string name,uint256 indexed operatorId, string pubKey, string ip_address);
 

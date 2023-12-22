@@ -27,6 +27,8 @@ abstract contract NexusBridgeUserCValue is NexusBaseBridge {
         uint256 rewards_to_claim = getRewards() - amountDistributed;
         if(rewards_to_claim > VALIDATOR_DEPOSIT) revert WaitingForValidatorExits();
         uint256 _nexus_rewards = (NexusFeePercentage*rewards_to_claim)/BASIS_POINT;
+        amountDistributed+=rewards_to_claim-_nexus_rewards;
+        cValue = ((amountDeposited - amountWithdrawn)*CValueBasisPoint)/((address(this).balance-_nexus_rewards)+(validatorCount*VALIDATOR_DEPOSIT));
         (bool nexus_success, bytes memory nexus_data) = NEXUS_FEE_ADDRESS.call{
             value: _nexus_rewards,
             gas: 5000
@@ -34,8 +36,6 @@ abstract contract NexusBridgeUserCValue is NexusBaseBridge {
         if (nexus_success) {
             emit NexusRewardsRedeemed(_nexus_rewards);
         }
-        amountDistributed+=rewards_to_claim-_nexus_rewards;
-        cValue = ((amountDeposited - amountWithdrawn)*CValueBasisPoint)/(address(this).balance+(validatorCount*VALIDATOR_DEPOSIT));
         emit CValueUpdated(cValue);
     }
 }

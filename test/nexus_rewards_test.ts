@@ -1,13 +1,13 @@
 import { Contract, Interface, Signer, parseEther } from "ethers";
 import { ethers } from "hardhat";
-import { NexusRewards } from "../typechain";
+import { ValidatorExecutionRewards } from "../typechain";
 const { expect } = require("chai");
 describe("Execution Reward test", function () {
     let transaction_bot: Signer, rollupAdmin: Signer, notrollupAdmin: Signer, MEV: Signer;
-    let reward: NexusRewards;
+    let reward: ValidatorExecutionRewards;
     before(async function () {
         [transaction_bot, rollupAdmin, notrollupAdmin,MEV] = await ethers.getSigners();
-        const Reward = await ethers.getContractFactory("NexusRewards");
+        const Reward = await ethers.getContractFactory("ValidatorExecutionRewards");
         reward = await Reward.deploy(await transaction_bot.getAddress());
         console.log("rewards contract deployed:", await reward.getAddress());
     })
@@ -19,8 +19,8 @@ describe("Execution Reward test", function () {
         await expect(await reward.rewardsEarned()).to.be.equal(parseEther("5"))
     });
     it("bot should update execution rewards for the rollup",async function () {
-        const rollupRewardIncorrect: NexusRewards.RollupExecutionRewardStruct[] = [{rollupAdmin:await rollupAdmin.getAddress(), amount: parseEther("20")}];
-        const rollupReward: NexusRewards.RollupExecutionRewardStruct[] = [{rollupAdmin:await rollupAdmin.getAddress(), amount: parseEther("2")}];
+        const rollupRewardIncorrect: ValidatorExecutionRewards.RollupExecutionRewardStruct[] = [{rollupAdmin:await rollupAdmin.getAddress(), amount: parseEther("20")}];
+        const rollupReward: ValidatorExecutionRewards.RollupExecutionRewardStruct[] = [{rollupAdmin:await rollupAdmin.getAddress(), amount: parseEther("2")}];
         await expect(reward.updateRewardsRollup(rollupRewardIncorrect)).to.be.revertedWithCustomError(reward,"IncorrectRewards");
         await expect(reward.connect(notrollupAdmin).updateRewardsRollup(rollupRewardIncorrect)).to.be.revertedWithCustomError(reward,"NotRewardBot");
         await reward.updateRewardsRollup(rollupReward);

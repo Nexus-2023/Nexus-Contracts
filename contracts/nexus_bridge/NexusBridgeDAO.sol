@@ -13,7 +13,15 @@ import {NexusBaseBridge} from "./NexusBaseBridge.sol";
  */
 abstract contract NexusBridgeDAO is NexusBaseBridge {
     uint256 public rewardsClaimed;
+    // to be changed rollup DAO
+    address public constant DAO = 0x14630e0428B9BbA12896402257fa09035f9F7447;
     event RewardsRedeemed(uint256 amount);
+    error NotDAO();
+
+    modifier onlyDAO() {
+        if (msg.sender != DAO) revert NotDAO();
+        _;
+    }
 
     function updateExitedValidators() external override onlyNexus {
         if(getRewards() < VALIDATOR_DEPOSIT) revert ValidatorNotExited();

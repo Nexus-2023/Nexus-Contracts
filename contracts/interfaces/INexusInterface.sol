@@ -48,6 +48,7 @@ interface INexusInterface {
     event ClusterRecharged(uint64 clusterId,uint256 amount);
     event RollupRewardsUpdated(address admin,uint256 amount,bool slashing);
     event ValidatorExited(address admin,bytes pubKey);
+    event NodeOperatorContractChanged(address _nodeOperatorContract);
 
     // functions
     function depositValidatorRollup(

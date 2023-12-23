@@ -1,8 +1,9 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
-import {INexusBridge} from "./interfaces/INexusBridge.sol";
-import {IDepositContract} from "./interfaces/IDepositContract.sol";
-import {INexusInterface} from "./interfaces/INexusInterface.sol";
+import {IDepositContract} from "../interfaces/IDepositContract.sol";
+import {INexusInterface} from "../interfaces/INexusInterface.sol";
+import {INexusBridge} from "../interfaces/INexusBridge.sol";
+
 
 /**
  * @title Nexus Bridge Contract
@@ -13,32 +14,44 @@ import {INexusInterface} from "./interfaces/INexusInterface.sol";
  * The staking ratio is maintained by the Nexus Contract and is set during the registration.It
  * can be changed anytime by rollup while doing a transaction to the Nexus Contract.
  */
-abstract contract NexusBridge is INexusBridge {
+abstract contract NexusBaseBridge is INexusBridge {
+    address public override NEXUS_NETWORK = 0xd1C788Ac548Cb467b3c4B14CF1793BCa3c1dCBEB;
+    address public NEXUS_FEE_ADDRESS = 0x735bf02E4435dFADfE47a5FE5FBD42Ef375864A9;
+    uint256 public amountDeposited;
+    uint256 public amountWithdrawn;
+    uint256 public slashedAmount;
+    uint256 public validatorCount;
+    uint256 public NexusFeePercentage;
     // To be changed to the respective network addresses:
-    address public constant DEPOSIT_CONTRACT =
-        0xff50ed3d0ec03aC01D4C79aAd74928BFF48a7b2b;
-    // to be changed rollup DAO
-    address public DAO = 0xff50ed3d0ec03aC01D4C79aAd74928BFF48a7b2b;
+    address public constant DEPOSIT_CONTRACT = 0xff50ed3d0ec03aC01D4C79aAd74928BFF48a7b2b;
+
     uint256 public constant VALIDATOR_DEPOSIT = 32 ether;
     uint256 public constant BASIS_POINT = 10000;
-    address public NEXUS_NETWORK = 0x59D3fB7123cE7f7226a3C2D3e47093B82359aBCD;
-    Rewards public stakingReturns;
-    uint256 private lastRewardUpdationTime;
+    error NotNexus();
+    error IncorrectWithdrawalCredentials();
+    error StakingLimitExceeding();
+    error IncorrectNexusFee();
+    error ValidatorNotExited();
+    error WaitingForValidatorExits();
+
+    event SlashingUpdated(uint256 amount);
+    event NexusFeeChanged(uint256 _nexus_fee);
+    event NexusRewardsRedeemed(uint256 amount);
 
     modifier onlyNexus() {
         if (msg.sender != NEXUS_NETWORK) revert NotNexus();
         _;
     }
 
-    modifier onlyDAO() {
-        if (msg.sender != DAO) revert NotDAO();
-        _;
+    function setNexusFee(uint256 _nexus_fee) external override onlyNexus{
+        if(_nexus_fee>(BASIS_POINT)/10) revert IncorrectNexusFee();
+        NexusFeePercentage = _nexus_fee;
+        emit NexusFeeChanged(_nexus_fee);
     }
 
     function depositValidatorNexus(
         INexusInterface.Validator[] calldata _validators,
-        uint256 stakingLimit,
-        uint256 validatorCount
+        uint256 stakingLimit
     ) external override onlyNexus {
         for (uint i = 0; i < _validators.length; i++) {
             bytes memory withdrawalFromCred = _validators[i]
@@ -67,42 +80,18 @@ abstract contract NexusBridge is INexusBridge {
                 _validators[i].depositRoot
             );
         }
-        validatorCount += _validators.length;
+        validatorCount+=_validators.length;
     }
 
-    function updateRewards(uint256 amount, bool slashed,uint256 validatorCount) external override onlyNexus {
-        if (
-            !slashed &&
-            amount <
-            ((validatorCount *
-                (32 ether) *
-                (block.timestamp - lastRewardUpdationTime) *
-                10) / 31556952) *
-                100
-        ) revert WrongRewardAmount();
-        if (slashed) {
-            stakingReturns.Slashing += amount;
-        } else {
-            stakingReturns.TotalRewardsEarned += amount;
-        }
-        lastRewardUpdationTime = block.timestamp;
-        emit RewardsUpdated(amount, slashed);
+    function validatorsSlashed(
+        uint256 amount
+    ) external override onlyNexus {
+        slashedAmount = amount;
+        emit SlashingUpdated(amount);
     }
 
-    function redeemRewards(uint256 amount, address toWallet) external onlyDAO {
-        if (
-            amount >
-            (stakingReturns.TotalRewardsEarned -
-                stakingReturns.RewardsRedeemed -
-                stakingReturns.Slashing)
-        ) revert IncorrectAmount();
-        (bool success, bytes memory nexusData) = toWallet.call{
-            value: amount,
-            gas: 5000
-        }("");
-        stakingReturns.RewardsRedeemed += amount;
-        if (success) {
-            emit RewardsRedeemed(amount, toWallet);
-        }
+    function getRewards() public view returns(uint256){
+        return (address(this).balance+(validatorCount*VALIDATOR_DEPOSIT)) - (amountDeposited - amountWithdrawn) - slashedAmount;
     }
+
 }

@@ -1,7 +1,18 @@
 {
   "name": "nexus-contracts",
   "scripts": {
-    "solhint": "./node_modules/.bin/solhint -f table contracts/**/*.sol"
+    "solhint": "./node_modules/.bin/solhint -f table contracts/**/*.sol",
+    "compile": "npx hardhat compile",
+    "deploy:local": "npx hardhat run scripts/deployNexus.ts --network local",
+    "deploy:goerli": "npx hardhat run scripts/deployNexus.ts --network goerli",
+    "verify:goerli": "verify=true npx hardhat run scripts/deployNexus.ts --network goerli",
+    "deploy:mainnet": "npx hardhat run scripts/deployNexus.ts --network mainnet",
+    "verify:mainnet": "verify=true npx hardhat run scripts/deployNexus.ts --network goerli",
+    "test:nodeOperator": "npx hardhat test test/node_operator_test.ts",
+    "test:nexusRewards": "npx hardhat test test/nexus_rewards_test.ts",
+    "test:nexus": "npx hardhat test test/nexus_test.ts",
+    "test:bridge": "npx hardhat test test/bridge_test.ts",
+    "test:all": "npx hardhat test"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.2",

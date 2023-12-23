@@ -40,4 +40,7 @@ interface ISSVNetworkCore {
         uint256 amount,
         ISSVNetworkCore.Cluster memory cluster
     ) external;
+
+    function setFeeRecipientAddress(address feeRecipientAddress) external;
+
 }

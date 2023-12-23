@@ -1,16 +1,18 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
+import {Ownable} from "./utils/NexusOwnable.sol";
 
-contract ValidatorExecutionRewards {
+contract ValidatorExecutionRewards is Ownable{
     struct RollupExecutionReward{
         address rollupAdmin;
         uint256 amount;
     }
     mapping(address => uint256) public executionRewards;
-    address public immutable rewardBot;
+    address public rewardBot;
     uint256 public rewardsEarned;
     uint256 public rewardsClaimed;
     event ExecutionRewardsReceived(uint256 rewards);
+    event ChangeRewardBotAddress(address reward_bot);
     event ExecutionRewardSent(uint256 rewards,address rollupAdmin);
     event RollupExecutionRewardUpdated(address rollupAdmin, uint256 rewards);
     error NotRewardBot();
@@ -24,6 +26,12 @@ contract ValidatorExecutionRewards {
 
     constructor(address _rewardBot){
         rewardBot = _rewardBot;
+        _ownableInit(msg.sender);
+    }
+
+    function changeRewardBotAddress(address _bot_address) external onlyOwner{
+        rewardBot = _bot_address;
+        emit ChangeRewardBotAddress(_bot_address);
     }
 
     receive() external payable {

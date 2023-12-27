@@ -20,8 +20,8 @@ abstract contract NexusBaseBridge is INexusBridge {
     uint256 public amountDeposited;
     uint256 public amountWithdrawn;
     uint256 public slashedAmount;
-    uint256 public validatorCount;
-    uint256 public NexusFeePercentage;
+    uint256 public override validatorCount;
+    uint256 public override NexusFeePercentage;
     // To be changed to the respective network addresses:
     address public constant DEPOSIT_CONTRACT = 0xff50ed3d0ec03aC01D4C79aAd74928BFF48a7b2b;
 

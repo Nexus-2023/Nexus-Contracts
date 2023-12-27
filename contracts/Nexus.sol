@@ -114,7 +114,7 @@ contract Nexus is INexusInterface, Ownable, Proxiable {
             stakingLimit,
             operatorCluster
         );
-        emit RollupRegistered(msg.sender, bridgeContract,stakingLimit,operatorCluster);
+        emit RollupRegistered(msg.sender, bridgeContract,stakingLimit,operatorCluster,nexusFee);
     }
 
     function changeStakingLimit(
@@ -183,7 +183,7 @@ contract Nexus is INexusInterface, Ownable, Proxiable {
             if (key_present){
                 activePubkeys.removeElement(pubkeys[i]);
                 exitingKeys.addElement(pubkeys[i]);
-                emit ValidatorExited(rollupAdmin,pubkeys[i]);
+                emit ValidatorExitSubmitted(rollupAdmin,pubkeys[i]);
             }else{
                 revert InvalidKeySupplied();
             }
@@ -195,6 +195,11 @@ contract Nexus is INexusInterface, Ownable, Proxiable {
         exitingKeys.removeElement(pubkey);
         emit ValidatorExited(rollupAdmin,pubkey);
         INexusBridge(rollups[rollupAdmin].bridgeContract).updateExitedValidators();
+    }
+
+    function validatorSlashed(address rollupAdmin, uint256 amountSlashed) external onlyOffChainBot{
+        INexusBridge(rollups[rollupAdmin].bridgeContract).validatorsSlashed(amountSlashed);
+        emit RollupValidatorSlashed(rollupAdmin,amountSlashed);
     }
 
     // cluster related functions

@@ -27,7 +27,12 @@ contract BridgeContractDAO is NexusBridgeDAO {
         emit EthReceived(msg.value);
     }
 
+    function depositFunds() external payable {
+        amountDeposited+=msg.value;
+    }
+
     function withdraw(uint256 amount) external payable {
         (bool success, bytes memory data) = msg.sender.call{value:amount,gas:5000}("");
+        amountWithdrawn-=amount;
     }
 }

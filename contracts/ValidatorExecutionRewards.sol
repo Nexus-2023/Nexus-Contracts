@@ -26,6 +26,7 @@ contract ValidatorExecutionRewards is Ownable{
 
     constructor(address _rewardBot){
         rewardBot = _rewardBot;
+        emit ChangeRewardBotAddress(_rewardBot);
         _ownableInit(msg.sender);
     }
 

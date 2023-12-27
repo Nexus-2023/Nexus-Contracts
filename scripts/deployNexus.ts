@@ -102,6 +102,10 @@ async function main() {
     nexusProxy = await NexusProxyContract.deploy( NexusImpl.interface.encodeFunctionData("initialize", []),await nexusImpl.getAddress());
     console.log("nexus proxy deployed to:", await nexusProxy.getAddress())
     output["NexusProxy"] =  await nexusProxy.getAddress();
+    const nexus_contract:Nexus = await NexusImpl.attach(nexusProxy);
+    await nexus_contract.changeExecutionFeeAddress(await validatorExecutionRewardContract.getAddress());
+    await nexus_contract.setOffChainBot(output["nexus_bot"]);
+    await nexus_contract.setNodeOperatorContract(nodeOperatorProxy.getAddress())
   }
 
   fs.writeFile(output_file, JSON.stringify(output), function(err) {

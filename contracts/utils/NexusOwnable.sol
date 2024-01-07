@@ -1,6 +1,11 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+/**
+ * @title Ownable Contract
+ * @author RohitAudit
+ * @dev This contract is used to implement ownable features to the contracts
+ */
 contract Ownable {
     address private owner;
     bool private initialized = false;
@@ -27,6 +32,10 @@ contract Ownable {
         initialized = true;
     }
 
+    /**
+     * This function transfers the ownership of the contract
+     * @param newOwner New Owner of the contract
+     */
     function transferOwnership(address newOwner) external onlyOwner{
         emit OwnerChanged(owner, newOwner);
         owner = newOwner;

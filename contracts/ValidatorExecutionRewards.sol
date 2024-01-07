@@ -1,7 +1,13 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 import {Ownable} from "./utils/NexusOwnable.sol";
-
+/**
+ * @title Validator Execution Reward Contract
+ * @author RohitAudit
+ * @dev This contract handles the proposer awards for the validators. As the rewards are associated with particular
+ * validator one needs to update it in the contract as to who can claim those rewards. The reward bot performs that
+ * functionality by tracking proposer of the block
+ */
 contract ValidatorExecutionRewards is Ownable{
     struct RollupExecutionReward{
         address rollupAdmin;
@@ -40,6 +46,10 @@ contract ValidatorExecutionRewards is Ownable{
         emit ExecutionRewardsReceived(msg.value);
     }
 
+    /**
+     * Used for updation of rewards for a particular rollup
+     * @param rewards: Array of rollups and their rewards earned by their validators
+     */
     function updateRewardsRollup(RollupExecutionReward[] calldata rewards) external onlyRewardBot {
         uint256 total_rewards;
         for(uint i=0;i<rewards.length;i++){
@@ -50,6 +60,9 @@ contract ValidatorExecutionRewards is Ownable{
         if (total_rewards>(rewardsEarned-rewardsClaimed)) revert IncorrectRewards();
     }
 
+    /**
+     * This function can be used by rollupAdmin to claim the proposer rewards asscociated with their validators
+     */
     function claimRewards() external {
         if (executionRewards[msg.sender] == 0) revert RewardNotPresent();
         uint256 amount_to_send = executionRewards[msg.sender];

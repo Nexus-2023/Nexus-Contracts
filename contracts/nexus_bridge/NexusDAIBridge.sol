@@ -14,7 +14,11 @@ interface IERC20 {
 
     function approve(address spender, uint256 value) external returns (bool);
 }
-
+/**
+ * @title Nexus DAI contract
+ * @author RohitAudit
+ * @dev 
+ */
 abstract contract NexusDai {
     uint256 public DAIDeposited;
     uint256 public DAIRedeemed;

@@ -3,13 +3,10 @@ pragma solidity ^0.8.19;
 import {NexusBaseBridge} from "./NexusBaseBridge.sol";
 
 /**
- * @title Nexus Bridge Contract
- * @dev This contract is used to enable eth staking via native bridge ontract of any rollup. It
- * enables the integration with Nexus Network. It also gives permission to Nexus contract to submit
- * keys using the unique withdrawal credentials for rollup.
- *
- * The staking ratio is maintained by the Nexus Contract and is set during the registration.It
- * can be changed anytime by rollup while doing a transaction to the Nexus Contract.
+ * @title Nexus Bridge DAO Contract
+ * @author RohitAudit
+ * @dev This contract enables DAO governing body of the rollup to claim the staking rewards
+ * from the bridge contract and use it for Ecosystem incentives etc.
  */
 abstract contract NexusBridgeDAO is NexusBaseBridge {
     uint256 public rewardsClaimed;
@@ -22,7 +19,7 @@ abstract contract NexusBridgeDAO is NexusBaseBridge {
         if (msg.sender != DAO) revert NotDAO();
         _;
     }
-
+    
     function updateExitedValidators() external override onlyNexus {
         if(getRewards() < VALIDATOR_DEPOSIT) revert ValidatorNotExited();
         validatorCount -= 1;

@@ -1,6 +1,13 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+/**
+ * @title BytesArray Library
+ * @author RohitAudit
+ * @dev This library is used for managing bytes array by providing following functionality:
+ * 1. Removing element from the array
+ * 2. Adding element to the array
+ */
 library BytesArrayLibrary {
     function addElement(bytes[] storage arr, bytes memory data) internal {
         arr.push(data);

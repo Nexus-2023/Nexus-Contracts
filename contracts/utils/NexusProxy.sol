@@ -1,6 +1,11 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+/**
+ * @title Proxy Contract
+ * @author RohitAudit
+ * @dev This is the UUPS proxy contract on which the transactions are sent
+ */
 
 contract Proxy{
     // Code position in storage is keccak256("PROXIABLE") = "0xc5f16f0fcc639fa48a6947836d9850f504798523bf8c9a3a87d5876cf622bcf7"

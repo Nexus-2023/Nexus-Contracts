@@ -7,6 +7,7 @@ import {INexusBridge} from "../interfaces/INexusBridge.sol";
 
 /**
  * @title Nexus Bridge Contract
+ * @author RohitAudit
  * @dev This contract is used to enable eth staking via native bridge ontract of any rollup. It
  * enables the integration with Nexus Network. It also gives permission to Nexus contract to submit
  * keys using the unique withdrawal credentials for rollup.

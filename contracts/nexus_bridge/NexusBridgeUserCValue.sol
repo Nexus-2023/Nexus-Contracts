@@ -3,13 +3,10 @@ pragma solidity ^0.8.19;
 import {NexusBaseBridge} from "./NexusBaseBridge.sol";
 
 /**
- * @title Nexus Bridge Contract
- * @dev This contract is used to enable eth staking via native bridge ontract of any rollup. It
- * enables the integration with Nexus Network. It also gives permission to Nexus contract to submit
- * keys using the unique withdrawal credentials for rollup.
- *
- * The staking ratio is maintained by the Nexus Contract and is set during the registration.It
- * can be changed anytime by rollup while doing a transaction to the Nexus Contract.
+ * @title Nexus Bridge User C value Contract
+ * @author RohitAudi
+ * @dev This contract is used to distribute the rewards back to the users by changing the
+ * token value depending on the rewards earned.
  */
 abstract contract NexusBridgeUserCValue is NexusBaseBridge {
     uint256 public cValue;

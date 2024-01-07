@@ -13,14 +13,15 @@ import {BytesArrayLibrary} from "./libraries/BytesArrayLibrary.sol";
 
 /**
  * @title Nexus Core Contract
+ * @author RohitAudit
  * @dev This contract is heart and soul of Nexus Network and is used for Operations like
  * 1. Onboarding of rollup to Nexus Network
- * 2. Change in staking limit for rollup
+ * 2. Change parameters for rollup
  * 3. Whitelisting rollup address
  * 4. Submitting keys to rollup bridge
  * 5. Submitting keyshares to SSV contract
  * 6. Recharge funds in SSV contract for validator operation
- * 7. Reward distribution for rollup to DAO and Nexus Fee Contract
+ * 7. Keep track of validator status and exits
  */
 contract Nexus is INexusInterface, Ownable, Proxiable {
     using EnumerableSet for EnumerableSet.AddressSet;

@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 import {NexusBaseBridge} from "./NexusBaseBridge.sol";
 
 /**
- * @title Nexus Bridge Contract
+ * @title Nexus Bridge Rebase Contract
  * @dev This contract is used to enable eth staking via native bridge ontract of any rollup. It
  * enables the integration with Nexus Network. It also gives permission to Nexus contract to submit
  * keys using the unique withdrawal credentials for rollup.

@@ -17,3 +17,37 @@ onboarding any rollup. Rollup has 3 choices as of now for bridge design:
 - **[Withdrawal](contracts/Withdrawal.sol)**: This is contract that is created for rollups when they
 register with Nexus Network. This contract receives rewards that are earned by validators created through
 their bridge contract.
+
+### Testing and Deploying
+Testing:
+- For testing the contracts one would need to enable forking in hardhat config
+```
+    networks: {
+      hardhat: {
+        forking: {
+          enabled: true,
+          url: process.env.GOERLI_URL || "",
+        },
+      }
+    }
+```
+- You can run the following command to run the unit test cases
+```
+npm run test:all
+```
+
+Deploying:
+- Local network
+```
+npm run deploy:local
+```
+- Goerli network
+```
+npm run deploy:goerli
+```
+- For verifying the contracts:
+```
+npm run verify:goerli
+```
+
+All the contracts address after deployment are stored in **output_network.json**

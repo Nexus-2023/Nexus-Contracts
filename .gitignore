@@ -24,3 +24,4 @@ cache
 .env
 contracts/proxy_test
 scripts/proxy_deploy.ts
+contracts/demo_contracts/delegate_test

@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity 0.8.19;
 import {Ownable} from "./utils/NexusOwnable.sol";
 /**
  * @title Validator Execution Reward Contract
@@ -24,6 +24,7 @@ contract ValidatorExecutionRewards is Ownable{
     error NotRewardBot();
     error RewardNotPresent();
     error IncorrectRewards();
+    error IncorrectAddress();
 
     modifier onlyRewardBot() {
         if (msg.sender != rewardBot) revert NotRewardBot();
@@ -37,6 +38,7 @@ contract ValidatorExecutionRewards is Ownable{
     }
 
     function changeRewardBotAddress(address _bot_address) external onlyOwner{
+        if (_bot_address == address(0)) revert IncorrectAddress();
         rewardBot = _bot_address;
         emit ChangeRewardBotAddress(_bot_address);
     }

@@ -144,7 +144,7 @@ contract NexusLibrary {
             slashedAmount;
     }
 
-    function redeemRewards(address reward_account,uint256 expectedFee) external onlyDAO validNexusFee(getVariable(NEXUS_FEE_PERCENTAGE_SLOT)) {
+    function redeemRewards(address reward_account,uint256 expectedFee) external onlyDAO {
         uint256 NexusFeePercentage = getVariable(NEXUS_FEE_PERCENTAGE_SLOT);
         if(expectedFee!=NexusFeePercentage) revert IncorrectNexusFee();
         uint256 total_rewards = getRewards();

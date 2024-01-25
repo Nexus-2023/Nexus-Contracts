@@ -25,7 +25,7 @@ abstract contract NexusBridgeDAO is NexusBaseBridge {
         validatorCount -= 1;
     }
 
-    function redeemRewards(address reward_account,uint256 expectedFee) external onlyDAO validNexusFee(NexusFeePercentage){
+    function redeemRewards(address reward_account,uint256 expectedFee) external onlyDAO{
         if(expectedFee!=NexusFeePercentage) revert IncorrectNexusFee();
         uint256 total_rewards = getRewards();
         if(total_rewards > VALIDATOR_DEPOSIT) revert WaitingForValidatorExits();

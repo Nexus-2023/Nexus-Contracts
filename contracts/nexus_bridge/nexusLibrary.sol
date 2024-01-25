@@ -144,13 +144,12 @@ contract NexusLibrary {
             slashedAmount;
     }
 
-    function redeemRewards(
-        address reward_account
-    ) external onlyDAO validNexusFee(getVariable(NEXUS_FEE_PERCENTAGE_SLOT)) {
+    function redeemRewards(address reward_account,uint256 expectedFee) external onlyDAO validNexusFee(getVariable(NEXUS_FEE_PERCENTAGE_SLOT)) {
+        uint256 NexusFeePercentage = getVariable(NEXUS_FEE_PERCENTAGE_SLOT);
+        if(expectedFee!=NexusFeePercentage) revert IncorrectNexusFee();
         uint256 total_rewards = getRewards();
         if (total_rewards > VALIDATOR_DEPOSIT)
             revert WaitingForValidatorExits();
-        uint256 NexusFeePercentage = getVariable(NEXUS_FEE_PERCENTAGE_SLOT);
         uint256 _nexus_rewards = (NexusFeePercentage * total_rewards) /
             BASIS_POINT;
         (bool nexus_success, bytes memory nexus_data) = NEXUS_FEE_ADDRESS.call{

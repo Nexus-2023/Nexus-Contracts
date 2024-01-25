@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity 0.8.19;
 import {NexusBaseBridge} from "./NexusBaseBridge.sol";
 
 /**
@@ -22,7 +22,7 @@ abstract contract NexusBridgeUserRebase is NexusBaseBridge {
         validatorCount -= 1;
     }
 
-    function rebase() external {
+    function rebase() external validNexusFee(NexusFeePercentage) {
         uint256 rewards_to_claim = getRewards() - amountDistributed;
         if(rewards_to_claim > VALIDATOR_DEPOSIT) revert WaitingForValidatorExits();
         uint256 _nexus_rewards = (NexusFeePercentage*rewards_to_claim)/BASIS_POINT;

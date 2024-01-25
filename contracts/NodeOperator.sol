@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity 0.8.19;
 import {Ownable} from "./utils/NexusOwnable.sol";
-import {Proxiable} from "./utils/UUPSUpgreadable.sol";
+import {UUPSUpgreadable} from "./utils/UUPSUpgreadable.sol";
 import {INodeOperator} from "./interfaces/INodeOperator.sol";
 
 /**
@@ -14,7 +14,7 @@ import {INodeOperator} from "./interfaces/INodeOperator.sol";
  *
  * In future, we will also introduce scoring in the contract itself.
  */
-contract NodeOperator is Ownable, Proxiable, INodeOperator{
+contract NodeOperator is Ownable, UUPSUpgreadable, INodeOperator{
 
     // This stores the DKG ip needed for DKG ceremony
     mapping(uint64=>string) public ssvDKGIP;

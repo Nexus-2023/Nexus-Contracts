@@ -65,14 +65,11 @@ abstract contract NexusBaseBridge is INexusBridge {
         INexusInterface.Validator[] calldata _validators,
         uint256 stakingLimit
     ) external override onlyNexus {
-        uint256 current_staking_limit = (((validatorCount +
+        uint256 validators_balance = (validatorCount +
             _validators.length) *
-            (VALIDATOR_DEPOSIT) *
-            BASIS_POINT) /
-            (address(this).balance +
-                (validatorCount + _validators.length) *
-                (VALIDATOR_DEPOSIT)));
-        if (current_staking_limit > stakingLimit)
+            (VALIDATOR_DEPOSIT);
+        if ((( validators_balance*BASIS_POINT) /
+            (address(this).balance + validators_balance)) > stakingLimit)
             revert StakingLimitExceeding();
         for (uint i = 0; i < _validators.length; i++) {
             bytes memory withdrawalFromCred = _validators[i]

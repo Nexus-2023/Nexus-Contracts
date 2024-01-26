@@ -61,9 +61,8 @@ contract NexusLibrary {
     }
 
     modifier validNexusFee(uint256 _nexus_fee) {
-        if (
-            _nexus_fee > (BASIS_POINT) / 10 || _nexus_fee <= (BASIS_POINT) / 20
-        ) revert IncorrectNexusFee();
+        if (_nexus_fee > (BASIS_POINT) / 10 || _nexus_fee <= (BASIS_POINT) / 20)
+            revert IncorrectNexusFee();
         _;
     }
 
@@ -100,15 +99,11 @@ contract NexusLibrary {
         uint256 stakingLimit
     ) external onlyNexus {
         uint256 validatorCount = getVariable(VALIDATOR_COUNT_SLOT);
-        uint256 current_staking_limit = (((validatorCount +
-            _validators.length) *
-            (VALIDATOR_DEPOSIT) *
-            BASIS_POINT) /
-            (address(this).balance +
-                (validatorCount + _validators.length) *
-                (VALIDATOR_DEPOSIT)));
-        if (current_staking_limit > stakingLimit)
-            revert StakingLimitExceeding();
+        uint256 validators_balance = (validatorCount + _validators.length) *
+            (VALIDATOR_DEPOSIT);
+        if (((validators_balance * BASIS_POINT) /
+                (address(this).balance + validators_balance)) > stakingLimit
+        ) revert StakingLimitExceeding();
         for (uint i = 0; i < _validators.length; i++) {
             bytes memory withdrawalFromCred = _validators[i]
                 .withdrawalAddress[12:];
@@ -144,9 +139,12 @@ contract NexusLibrary {
             slashedAmount;
     }
 
-    function redeemRewards(address reward_account,uint256 expectedFee) external onlyDAO {
+    function redeemRewards(
+        address reward_account,
+        uint256 expectedFee
+    ) external onlyDAO {
         uint256 NexusFeePercentage = getVariable(NEXUS_FEE_PERCENTAGE_SLOT);
-        if(expectedFee!=NexusFeePercentage) revert IncorrectNexusFee();
+        if (expectedFee != NexusFeePercentage) revert IncorrectNexusFee();
         uint256 total_rewards = getRewards();
         if (total_rewards > VALIDATOR_DEPOSIT)
             revert WaitingForValidatorExits();

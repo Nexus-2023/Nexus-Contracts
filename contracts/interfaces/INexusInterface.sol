@@ -43,7 +43,6 @@ interface INexusInterface {
     error InvalidKeySupplied();
     error ClusterAlreadyExited();
     error IncorrectStakingLimit();
-    error IncorrectAddress();
     error IncorrectValidatorStatus();
 
     // events

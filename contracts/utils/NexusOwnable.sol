@@ -13,6 +13,7 @@ contract Ownable {
     event OwnerChanged(address oldOwner, address newOwner);
     error NotOwner();
     error ContractAlreadyInitialized();
+    error IncorrectAddress();
     modifier onlyOwner() {
         if (msg.sender != owner) revert NotOwner();
         _;
@@ -37,6 +38,8 @@ contract Ownable {
      * @param newOwner New Owner of the contract
      */
     function transferOwnership(address newOwner) external onlyOwner{
+        if (newOwner == address(0)) revert IncorrectAddress();
+
         emit OwnerChanged(owner, newOwner);
         owner = newOwner;
     }

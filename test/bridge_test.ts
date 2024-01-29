@@ -36,8 +36,8 @@ describe("bridge test", function () {
         it("should be able to claim his DAO rewards", async function(){
             const before_balance = await ethers.provider.getBalance(await user1.getAddress());
             const before_balance_nexus = await ethers.provider.getBalance(await nexus_fee.getAddress());
-            await expect(bridgeContractDao.connect(user2).redeemRewards(await user1.getAddress())).to.be.revertedWithCustomError(bridgeContractDao,"NotDAO");
-            await bridgeContractDao.connect(dao_address).redeemRewards(await user1.getAddress());
+            await expect(bridgeContractDao.connect(user2).redeemRewards(await user1.getAddress(),await bridgeContractDao.NexusFeePercentage())).to.be.revertedWithCustomError(bridgeContractDao,"NotDAO");
+            await bridgeContractDao.connect(dao_address).redeemRewards(await user1.getAddress(),await bridgeContractDao.NexusFeePercentage());
             await expect(await ethers.provider.getBalance(await user1.getAddress())).to.equal(before_balance+parseEther("0.9"))
             await expect(await ethers.provider.getBalance(await nexus_fee.getAddress())).to.equal(before_balance_nexus+parseEther("0.1"))
         });
@@ -48,7 +48,7 @@ describe("bridge test", function () {
                 to: await bridgeContractDao.getAddress(),
                 value: parseEther("632")
             })
-            await expect(bridgeContractDao.connect(dao_address).redeemRewards(await user1.getAddress())).to.be.revertedWithCustomError(bridgeContractDao,"WaitingForValidatorExits");
+            await expect(bridgeContractDao.connect(dao_address).redeemRewards(await user1.getAddress(),await bridgeContractDao.NexusFeePercentage())).to.be.revertedWithCustomError(bridgeContractDao,"WaitingForValidatorExits");
             await bridgeContractDao.updateExitedValidators();
             await expect(await bridgeContractDao.validatorCount()).to.be.equal(9)
         });

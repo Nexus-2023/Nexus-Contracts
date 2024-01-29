@@ -24,7 +24,6 @@ contract ValidatorExecutionRewards is Ownable{
     error NotRewardBot();
     error RewardNotPresent();
     error IncorrectRewards();
-    error IncorrectAddress();
 
     modifier onlyRewardBot() {
         if (msg.sender != rewardBot) revert NotRewardBot();

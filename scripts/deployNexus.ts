@@ -32,10 +32,16 @@ export function get_file(network_name:String){
       file_name = "output_mainnet.json"
       break;
     }
+    case "holesky":{
+      file_name = "output_holesky.json"
+      break;
+    }
     case "local":{
       file_name = "output_local.json"
       break;
-
+    }
+    default:{
+      throw Error("Network not recognized")
     }
   }
   output_file = process.cwd() + "/scripts/" + file_name;
@@ -70,6 +76,7 @@ async function main() {
     nodeOperatorProxy = await NodeOperatorProxy.attach(output["NodeOperatorProxy"]);
   } else {
     nodeOperatorProxy = await NodeOperatorProxy.deploy( NodeOperatorImpl.interface.encodeFunctionData("initialize", []),await nodeOperatorImpl.getAddress());
+    await nodeOperatorProxy.waitForDeployment()
     console.log("node operator proxy deployed to:", await nodeOperatorProxy.getAddress())
     output["NodeOperatorProxy"] =  await nodeOperatorProxy.getAddress();
   }
@@ -80,6 +87,7 @@ async function main() {
     validatorExecutionRewardContract = await ValidatorExecutionRewardsContract.attach(output["ValidatorExecutionRewards"])
   }else{
     validatorExecutionRewardContract = await ValidatorExecutionRewardsContract.deploy(output["reward_updation_bot"])
+    await validatorExecutionRewardContract.waitForDeployment()
     console.log("validator ExecutionReward Contract deployed to:", await validatorExecutionRewardContract.getAddress())
     output["ValidatorExecutionRewards"] = await validatorExecutionRewardContract.getAddress()
   }
@@ -90,6 +98,7 @@ async function main() {
     nexusImpl = await NexusImpl.attach(output["NexusImpl"])
   }else {
     nexusImpl = await NexusImpl.deploy()
+    await nexusImpl.waitForDeployment()
     console.log("nexus implementation Contract deployed to:", await nexusImpl.getAddress())
     output["NexusImpl"] = await nexusImpl.getAddress()
   }
@@ -100,6 +109,7 @@ async function main() {
     nexusProxy = await NexusProxyContract.attach(output["NexusProxy"])
   } else {
     nexusProxy = await NexusProxyContract.deploy( NexusImpl.interface.encodeFunctionData("initialize", []),await nexusImpl.getAddress());
+    await nexusProxy.waitForDeployment()
     console.log("nexus proxy deployed to:", await nexusProxy.getAddress())
     output["NexusProxy"] =  await nexusProxy.getAddress();
     const nexus_contract:Nexus = await NexusImpl.attach(nexusProxy);

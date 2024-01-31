@@ -9,6 +9,7 @@ import {ISSVNetworkCore} from "./interfaces/ISSVNetwork.sol";
 import {INexusInterface} from "./interfaces/INexusInterface.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {BytesArrayLibrary} from "./libraries/BytesArrayLibrary.sol";
+import "hardhat/console.sol";
 
 /**
  * @title Nexus Core Contract
@@ -29,15 +30,21 @@ contract Nexus is INexusInterface, Ownable, UUPSUpgreadable {
     EnumerableSet.AddressSet private whitelistedRollups;
     address public offChainBot;
     mapping(address => Rollup) public rollups;
-    mapping(bytes=>ValidatorStatus) public validators;
-    mapping(uint256=>uint16) polygonCDKPartners;
+    mapping(bytes => ValidatorStatus) public validators;
+    mapping(uint256 => uint16) polygonCDKPartners;
     address public NodeOperatorContract;
 
-    // change these addresses to mainnet address when deploying on mainnet
+    // Goerli Address
+    // address private constant SSV_NETWORK =
+    //     0xC3CD9A0aE89Fff83b71b58b6512D43F8a41f363D;
+    // address private constant SSV_TOKEN =
+    //     0x3a9f01091C446bdE031E39ea8354647AFef091E7;
+
+    // Holesky Address
     address private constant SSV_NETWORK =
-        0xC3CD9A0aE89Fff83b71b58b6512D43F8a41f363D;
+        0x38A4794cCEd47d3baf7370CcC43B560D3a1beEFA;
     address private constant SSV_TOKEN =
-        0x3a9f01091C446bdE031E39ea8354647AFef091E7;
+        0xad45A78180961079BFaeEe349704F411dfF947C6;
     uint16 private constant BASIS_POINT = 10000;
 
     modifier onlyOffChainBot() {
@@ -52,13 +59,12 @@ contract Nexus is INexusInterface, Ownable, UUPSUpgreadable {
     }
 
     modifier nonZeroAddress(address _contract) {
-        if (_contract ==address(0)) revert IncorrectAddress();
+        if (_contract == address(0)) revert IncorrectAddress();
         _;
     }
 
     function initialize() public initilizeOnce {
         _ownableInit(msg.sender);
-
     }
 
     // admin related functions
@@ -66,7 +72,7 @@ contract Nexus is INexusInterface, Ownable, UUPSUpgreadable {
     function whitelistRollup(
         string calldata name,
         address rollupAddress
-    ) external onlyOwner{
+    ) external onlyOwner {
         if (whitelistedRollups.add(rollupAddress)) {
             emit RollupWhitelisted(name, rollupAddress);
         } else {
@@ -74,21 +80,31 @@ contract Nexus is INexusInterface, Ownable, UUPSUpgreadable {
         }
     }
 
-    function setOffChainBot(address _botAddress) external onlyOwner nonZeroAddress(_botAddress){
+    function setOffChainBot(
+        address _botAddress
+    ) external onlyOwner nonZeroAddress(_botAddress) {
         offChainBot = _botAddress;
     }
 
-    function updateProxy(address newImplemetation) public onlyOwner nonZeroAddress(newImplemetation){
+    function updateProxy(
+        address newImplemetation
+    ) public onlyOwner nonZeroAddress(newImplemetation) {
         updateCodeAddress(newImplemetation);
     }
 
-    function setNodeOperatorContract(address _nodeOperator) external onlyOwner nonZeroAddress(_nodeOperator){
-        NodeOperatorContract=_nodeOperator;
+    function setNodeOperatorContract(
+        address _nodeOperator
+    ) external onlyOwner nonZeroAddress(_nodeOperator) {
+        NodeOperatorContract = _nodeOperator;
         emit NodeOperatorContractChanged(_nodeOperator);
     }
 
-    function changeExecutionFeeAddress(address _execution_fee_address) external onlyOwner nonZeroAddress(_execution_fee_address){
-        ISSVNetworkCore(SSV_NETWORK).setFeeRecipientAddress(_execution_fee_address);
+    function changeExecutionFeeAddress(
+        address _execution_fee_address
+    ) external onlyOwner nonZeroAddress(_execution_fee_address) {
+        ISSVNetworkCore(SSV_NETWORK).setFeeRecipientAddress(
+            _execution_fee_address
+        );
     }
 
     // rollup related functions
@@ -104,11 +120,12 @@ contract Nexus is INexusInterface, Ownable, UUPSUpgreadable {
         uint64 operatorCluster,
         uint256 nexusFee,
         uint16 stakingLimit
-    ) external onlyWhitelistedRollup{
+    ) external onlyWhitelistedRollup {
         if (rollups[msg.sender].bridgeContract != address(0))
             revert RollupAlreadyRegistered();
-        if (INexusBridge(bridgeContract).NEXUS_NETWORK()!=address(this)) revert NexusAddressNotFound();
-        if (stakingLimit>BASIS_POINT) revert IncorrectStakingLimit();
+        if (INexusBridge(bridgeContract).NEXUS_NETWORK() != address(this))
+            revert NexusAddressNotFound();
+        if (stakingLimit > BASIS_POINT) revert IncorrectStakingLimit();
         INexusBridge(bridgeContract).setNexusFee(nexusFee);
         INodeOperator(NodeOperatorContract).getCluster(operatorCluster);
         rollups[msg.sender] = Rollup(
@@ -116,31 +133,35 @@ contract Nexus is INexusInterface, Ownable, UUPSUpgreadable {
             stakingLimit,
             operatorCluster
         );
-        emit RollupRegistered(msg.sender, bridgeContract,stakingLimit,operatorCluster,nexusFee);
+        emit RollupRegistered(
+            msg.sender,
+            bridgeContract,
+            stakingLimit,
+            operatorCluster,
+            nexusFee
+        );
     }
 
     function changeStakingLimit(
         uint16 newStakingLimit
     ) external onlyWhitelistedRollup {
-        if (newStakingLimit>BASIS_POINT) revert IncorrectStakingLimit();
+        if (newStakingLimit > BASIS_POINT) revert IncorrectStakingLimit();
         rollups[msg.sender].stakingLimit = newStakingLimit;
-        emit StakingLimitChanged(
-            msg.sender,
-            newStakingLimit
-        );
+        emit StakingLimitChanged(msg.sender, newStakingLimit);
     }
 
-    function changeNexusFee(uint256 _new_fee) external onlyWhitelistedRollup{
+    function changeNexusFee(uint256 _new_fee) external onlyWhitelistedRollup {
         INexusBridge(rollups[msg.sender].bridgeContract).setNexusFee(_new_fee);
-        emit NexusFeeChanged(msg.sender,_new_fee);
+        emit NexusFeeChanged(msg.sender, _new_fee);
     }
 
-    function changeCluster(uint64 operatorCluster) external onlyWhitelistedRollup{
+    function changeCluster(
+        uint64 operatorCluster
+    ) external onlyWhitelistedRollup {
         INodeOperator(NodeOperatorContract).getCluster(operatorCluster);
         rollups[msg.sender].operatorCluster = operatorCluster;
-        emit RollupOperatorClusterChanged(msg.sender,operatorCluster);
+        emit RollupOperatorClusterChanged(msg.sender, operatorCluster);
     }
-
 
     // validator realted function
 
@@ -149,7 +170,8 @@ contract Nexus is INexusInterface, Ownable, UUPSUpgreadable {
         Validator[] calldata _validators
     ) external override onlyOffChainBot {
         for (uint i = 0; i < _validators.length; i++) {
-            if(validators[_validators[i].pubKey]!=ValidatorStatus.INACTIVE) revert IncorrectValidatorStatus();
+            if (validators[_validators[i].pubKey] != ValidatorStatus.INACTIVE)
+                revert IncorrectValidatorStatus();
             validators[_validators[i].pubKey] = ValidatorStatus.DEPOSITED;
             emit ValidatorSubmitted(_validators[i].pubKey, _rollupAdmin);
         }
@@ -157,14 +179,15 @@ contract Nexus is INexusInterface, Ownable, UUPSUpgreadable {
             .depositValidatorNexus(
                 _validators,
                 uint256(rollups[_rollupAdmin].stakingLimit)
-        );
+            );
     }
 
     function depositValidatorShares(
         address _rollupAdmin,
         ValidatorShares calldata _validatorShare
     ) external override onlyOffChainBot {
-        if(validators[_validatorShare.pubKey]!=ValidatorStatus.DEPOSITED) revert IncorrectValidatorStatus();
+        if (validators[_validatorShare.pubKey] != ValidatorStatus.DEPOSITED)
+            revert IncorrectValidatorStatus();
         IERC20(SSV_TOKEN).approve(SSV_NETWORK, _validatorShare.amount);
         ISSVNetworkCore(SSV_NETWORK).registerValidator(
             _validatorShare.pubKey,
@@ -174,33 +197,66 @@ contract Nexus is INexusInterface, Ownable, UUPSUpgreadable {
             _validatorShare.cluster
         );
         validators[_validatorShare.pubKey] = ValidatorStatus.SHARE_DEPOSITED;
-        emit ValidatorShareSubmitted(_validatorShare.pubKey, _rollupAdmin,_validatorShare.amount);
+        emit ValidatorShareSubmitted(
+            _validatorShare.pubKey,
+            _rollupAdmin,
+            _validatorShare.amount
+        );
     }
 
-    function validatorExit(address rollupAdmin,bytes[] calldata pubkeys) external onlyOffChainBot{
-        for(uint i=0;i<pubkeys.length;i++){
-            if(validators[pubkeys[i]]!=ValidatorStatus.SHARE_DEPOSITED) revert IncorrectValidatorStatus();
-            validators[pubkeys[i]] = ValidatorStatus.VALIDATOR_EXIT_SUBMITTED;
-        }
+    function validatorExit(
+        address rollupAdmin,
+        bytes calldata pubkey,
+        uint64[] calldata operatorIds
+    ) external onlyOffChainBot {
+        if (validators[pubkey] != ValidatorStatus.SHARE_DEPOSITED) revert IncorrectValidatorStatus();
+        ISSVNetworkCore(SSV_NETWORK).exitValidator(pubkey, operatorIds);
+        validators[pubkey] = ValidatorStatus.VALIDATOR_EXIT_SUBMITTED;
+        emit ValidatorExitSubmitted(rollupAdmin, pubkey);
     }
 
-    function validatorExitBalanceTransferred(address rollupAdmin,bytes calldata pubkey, uint64[] memory operatorIds, ISSVNetworkCore.Cluster memory cluster) external onlyOffChainBot{
-        if(validators[pubkey]!=ValidatorStatus.VALIDATOR_EXIT_SUBMITTED) revert IncorrectValidatorStatus();
-        ISSVNetworkCore(SSV_NETWORK).removeValidator(pubkey, operatorIds, cluster);
-        INexusBridge(rollups[rollupAdmin].bridgeContract).updateExitedValidators();
+    function validatorExitBalanceTransferred(
+        address rollupAdmin,
+        bytes calldata pubkey,
+        uint64[] memory operatorIds,
+        ISSVNetworkCore.Cluster memory cluster
+    ) external onlyOffChainBot {
+        if (validators[pubkey] != ValidatorStatus.VALIDATOR_EXIT_SUBMITTED)
+            revert IncorrectValidatorStatus();
+        ISSVNetworkCore(SSV_NETWORK).removeValidator(
+            pubkey,
+            operatorIds,
+            cluster
+        );
+        INexusBridge(rollups[rollupAdmin].bridgeContract)
+            .updateExitedValidators();
         validators[pubkey] = ValidatorStatus.VALIDATOR_EXITED;
-        emit ValidatorExited(rollupAdmin,pubkey);
+        emit ValidatorExited(rollupAdmin, pubkey);
     }
 
-    function validatorSlashed(address rollupAdmin, uint256 amountSlashed) external onlyOffChainBot{
-        INexusBridge(rollups[rollupAdmin].bridgeContract).validatorsSlashed(amountSlashed);
-        emit RollupValidatorSlashed(rollupAdmin,amountSlashed);
+    function validatorSlashed(
+        address rollupAdmin,
+        uint256 amountSlashed
+    ) external onlyOffChainBot {
+        INexusBridge(rollups[rollupAdmin].bridgeContract).validatorsSlashed(
+            amountSlashed
+        );
+        emit RollupValidatorSlashed(rollupAdmin, amountSlashed);
     }
 
     // cluster related functions
 
-    function rechargeCluster(uint64 clusterId, uint256 amount,ISSVNetworkCore.Cluster memory cluster) external onlyOffChainBot{
-        ISSVNetworkCore(SSV_NETWORK).deposit(address(this),INodeOperator(NodeOperatorContract).getCluster(clusterId),amount,cluster);
-        emit ClusterRecharged(clusterId,amount);
+    function rechargeCluster(
+        uint64 clusterId,
+        uint256 amount,
+        ISSVNetworkCore.Cluster memory cluster
+    ) external onlyOffChainBot {
+        ISSVNetworkCore(SSV_NETWORK).deposit(
+            address(this),
+            INodeOperator(NodeOperatorContract).getCluster(clusterId),
+            amount,
+            cluster
+        );
+        emit ClusterRecharged(clusterId, amount);
     }
 }

@@ -42,8 +42,22 @@ const config: HardhatUserConfig = {
     target: "ethers-v6",
   },
   networks: {
+    local: {
+      url: "http://localhost:8545"
+    },
     goerli: {
       url: process.env.GOERLI_URL || "",
+      accounts:
+        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+    },
+    holesky: {
+      url: process.env.Holesky || "",
+      gasMultiplier: 5,
+      accounts:
+        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+    },
+    mainnet: {
+      url: process.env.MAINNET || "",
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
@@ -55,7 +69,7 @@ const config: HardhatUserConfig = {
       // },
       forking: {
         enabled: true,
-        url: process.env.GOERLI_URL || "",
+        url: process.env.Holesky || "",
       },
     },
   },
@@ -71,6 +85,16 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
+    customChains:[
+      {
+        network: "holesky",
+        chainId: 17000,
+        urls: {
+            apiURL: "https://api-holesky.etherscan.io/api",
+            browserURL: "https://holesky.etherscan.io"
+        }
+      }
+    ]
   },
 };
 

@@ -28,6 +28,8 @@ interface ISSVNetworkCore {
         Cluster memory cluster
     ) external;
 
+    function exitValidator(bytes calldata publicKey, uint64[] calldata operatorIds) external;
+
     function removeValidator(
         bytes calldata publicKey,
         uint64[] memory operatorIds,

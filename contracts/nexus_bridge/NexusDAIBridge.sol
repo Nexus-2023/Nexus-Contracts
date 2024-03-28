@@ -1,4 +1,4 @@
-//SPDX-License-Identifier: MIT
+//SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity ^0.8.19;
 import {ISavingsDai} from "../interfaces/ISavingsDai.sol";
 
@@ -17,7 +17,7 @@ interface IERC20 {
 /**
  * @title Nexus DAI contract
  * @author RohitAudit
- * @dev 
+ * @dev
  */
 abstract contract NexusDai {
     uint256 public DAIDeposited;

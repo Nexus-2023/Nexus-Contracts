@@ -4,6 +4,7 @@ import {ISSVNetworkCore} from "./ISSVNetwork.sol";
 
 interface INexusInterface {
     // structs to be used for nexus interface
+    // todo: add multiple operator cluster mapping so that rollup can select cluster and percentage per cluster
     struct Rollup {
         address bridgeContract;
         uint16 stakingLimit;
@@ -23,6 +24,14 @@ interface INexusInterface {
         ISSVNetworkCore.Cluster cluster;
     }
 
+    enum ValidatorStatus{
+        INACTIVE,
+        DEPOSITED,
+        SHARE_DEPOSITED,
+        VALIDATOR_EXIT_SUBMITTED,
+        VALIDATOR_EXITED
+    }
+
     // errors
     error NotNexusBot();
     error AddressAlreadyWhitelisted();
@@ -34,6 +43,7 @@ interface INexusInterface {
     error InvalidKeySupplied();
     error ClusterAlreadyExited();
     error IncorrectStakingLimit();
+    error IncorrectValidatorStatus();
 
     // events
     event RollupWhitelisted(string name, address rollupAddress);

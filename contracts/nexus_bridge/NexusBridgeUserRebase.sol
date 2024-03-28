@@ -22,7 +22,7 @@ abstract contract NexusBridgeUserRebase is NexusBaseBridge {
         validatorCount -= 1;
     }
 
-    function rebase() external {
+    function rebase() external validNexusFee(NexusFeePercentage) {
         uint256 rewards_to_claim = getRewards() - amountDistributed;
         if(rewards_to_claim > VALIDATOR_DEPOSIT) revert WaitingForValidatorExits();
         uint256 _nexus_rewards = (NexusFeePercentage*rewards_to_claim)/BASIS_POINT;

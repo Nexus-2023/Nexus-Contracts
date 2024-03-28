@@ -31,12 +31,15 @@ contract ValidatorExecutionRewards is Ownable{
     }
 
     constructor(address _rewardBot){
+        if (_rewardBot == address(0)) revert IncorrectAddress();
+
         rewardBot = _rewardBot;
         emit ChangeRewardBotAddress(_rewardBot);
         _ownableInit(msg.sender);
     }
 
     function changeRewardBotAddress(address _bot_address) external onlyOwner{
+        if (_bot_address == address(0)) revert IncorrectAddress();
         rewardBot = _bot_address;
         emit ChangeRewardBotAddress(_bot_address);
     }

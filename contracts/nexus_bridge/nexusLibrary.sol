@@ -12,7 +12,7 @@ import {INexusBridge} from "../interfaces/INexusBridge.sol";
  */
 contract NexusLibrary {
     address public constant NEXUS_NETWORK =
-        0x7610dd2DE44aA3c03313b4c2812C482D86F3a9e7;
+        0xd1C788Ac548Cb467b3c4B14CF1793BCa3c1dCBEB;
     address public constant NEXUS_FEE_ADDRESS =
         0x735bf02E4435dFADfE47a5FE5FBD42Ef375864A9;
 
@@ -60,7 +60,13 @@ contract NexusLibrary {
         _;
     }
 
-    function setVariable(bytes32 _slot, uint256 amount) public {
+    modifier validNexusFee(uint256 _nexus_fee) {
+        if (_nexus_fee > (BASIS_POINT) / 10 || _nexus_fee <= (BASIS_POINT) / 20)
+            revert IncorrectNexusFee();
+        _;
+    }
+
+    function setVariable(bytes32 _slot, uint256 amount) internal {
         assembly {
             sstore(_slot, amount)
         }
@@ -78,11 +84,12 @@ contract NexusLibrary {
         if (getRewards() < VALIDATOR_DEPOSIT) revert ValidatorNotExited();
         uint256 validatorCount = getVariable(VALIDATOR_COUNT_SLOT);
         validatorCount -= 1;
-        setVariable(VALIDATOR_COUNT_SLOT,validatorCount);
+        setVariable(VALIDATOR_COUNT_SLOT, validatorCount);
     }
 
-    function setNexusFee(uint256 _nexus_fee) external onlyNexus {
-        if (_nexus_fee > (BASIS_POINT) / 10) revert IncorrectNexusFee();
+    function setNexusFee(
+        uint256 _nexus_fee
+    ) external onlyNexus validNexusFee(_nexus_fee) {
         setVariable(NEXUS_FEE_PERCENTAGE_SLOT, _nexus_fee);
         emit NexusFeeChanged(_nexus_fee);
     }
@@ -91,6 +98,12 @@ contract NexusLibrary {
         INexusInterface.Validator[] calldata _validators,
         uint256 stakingLimit
     ) external onlyNexus {
+        uint256 validatorCount = getVariable(VALIDATOR_COUNT_SLOT);
+        uint256 validators_balance = (validatorCount + _validators.length) *
+            (VALIDATOR_DEPOSIT);
+        if (((validators_balance * BASIS_POINT) /
+                (address(this).balance + validators_balance)) > stakingLimit
+        ) revert StakingLimitExceeding();
         for (uint i = 0; i < _validators.length; i++) {
             bytes memory withdrawalFromCred = _validators[i]
                 .withdrawalAddress[12:];
@@ -98,18 +111,6 @@ contract NexusLibrary {
                 keccak256(withdrawalFromCred) !=
                 keccak256(abi.encodePacked(address(this)))
             ) revert IncorrectWithdrawalCredentials();
-        }
-        uint256 validatorCount = getVariable(VALIDATOR_COUNT_SLOT);
-        if (
-            (((validatorCount + _validators.length) *
-                (VALIDATOR_DEPOSIT) *
-                BASIS_POINT) /
-                (address(this).balance +
-                    (validatorCount + _validators.length) *
-                    (VALIDATOR_DEPOSIT))) > stakingLimit
-        ) revert StakingLimitExceeding();
-
-        for (uint i = 0; i < _validators.length; i++) {
             IDepositContract(DEPOSIT_CONTRACT).deposit{
                 value: VALIDATOR_DEPOSIT
             }(
@@ -138,11 +139,15 @@ contract NexusLibrary {
             slashedAmount;
     }
 
-    function redeemRewards(address reward_account) external onlyDAO {
+    function redeemRewards(
+        address reward_account,
+        uint256 expectedFee
+    ) external onlyDAO {
+        uint256 NexusFeePercentage = getVariable(NEXUS_FEE_PERCENTAGE_SLOT);
+        if (expectedFee != NexusFeePercentage) revert IncorrectNexusFee();
         uint256 total_rewards = getRewards();
         if (total_rewards > VALIDATOR_DEPOSIT)
             revert WaitingForValidatorExits();
-        uint256 NexusFeePercentage = getVariable(NEXUS_FEE_PERCENTAGE_SLOT);
         uint256 _nexus_rewards = (NexusFeePercentage * total_rewards) /
             BASIS_POINT;
         (bool nexus_success, bytes memory nexus_data) = NEXUS_FEE_ADDRESS.call{

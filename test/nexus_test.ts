@@ -27,6 +27,21 @@ describe("nexus test", function () {
     console.log("nexus proxy deployed:", await nexusProxy.getAddress());
     nexus = await NexusContract.attach(await nexusProxy.getAddress());
   });
+  describe("Admin Functionalities", function(){
+    it("should set off chain bot", async function (){
+      await expect(nexus.connect(userRollup).setOffChainBot(await userRollup.getAddress())).to.be.revertedWithCustomError(nexus,"NotOwner")
+      await nexus.setOffChainBot(await userRollup.getAddress())
+    })
+    it("should change SSV fee recipient", async function(){
+      await expect(nexus.connect(userRollup).changeExecutionFeeAddress(await userRollup.getAddress())).to.be.revertedWithCustomError(nexus,"NotOwner")
+      await nexus.changeExecutionFeeAddress(await userRollup.getAddress())
+    })
+    it("should be able to whitelist rollups", async function () {
+      await expect(nexus.connect(userRollup).whitelistRollup("nexus",await userRollup.getAddress())).to.be.revertedWithCustomError(nexus,"NotOwner")
+      await nexus.whitelistRollup("nexus",await userRollup.getAddress())
+      await expect(nexus.whitelistRollup("nexus",await userRollup.getAddress())).to.be.revertedWithCustomError(nexus,"AddressAlreadyWhitelisted")
+    })
+  });
   describe("Rollup functionalities", function () {
     before(async function () {
       const BridgeContract = await ethers.getContractFactory("BridgeContractDAO");
@@ -82,7 +97,7 @@ describe("nexus test", function () {
     it("should change nexus fee limit",async function () {
       await expect(nexus.changeNexusFee(2000)).to.be.revertedWithCustomError(nexus,"AddressNotWhitelisted")
       await expect(nexus.connect(rollupAdmin1).changeNexusFee(2000)).to.be.revertedWithCustomError(bridgeContractDAO,"IncorrectNexusFee")
-      await nexus.connect(rollupAdmin1).changeNexusFee(500);
+      await nexus.connect(rollupAdmin1).changeNexusFee(900);
     });
     it("should change cluster ",async function () {
       await expect(nexus.changeCluster(2)).to.be.revertedWithCustomError(nexus,"AddressNotWhitelisted")

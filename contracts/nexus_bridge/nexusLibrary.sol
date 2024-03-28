@@ -1,5 +1,5 @@
-//SPDX-License-Identifier: MIT
-pragma solidity 0.8.19;
+//SPDX-License-Identifier: AGPL-3.0-only
+pragma solidity ^0.8.19;
 import {IDepositContract} from "../interfaces/IDepositContract.sol";
 import {INexusInterface} from "../interfaces/INexusInterface.sol";
 import {INexusBridge} from "../interfaces/INexusBridge.sol";

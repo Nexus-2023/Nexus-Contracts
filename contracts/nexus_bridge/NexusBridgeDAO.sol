@@ -1,5 +1,5 @@
-//SPDX-License-Identifier: MIT
-pragma solidity 0.8.19;
+//SPDX-License-Identifier: AGPL-3.0-only
+pragma solidity ^0.8.19;
 import {NexusBaseBridge} from "./NexusBaseBridge.sol";
 
 /**
@@ -19,6 +19,7 @@ abstract contract NexusBridgeDAO is NexusBaseBridge {
         if (msg.sender != DAO) revert NotDAO();
         _;
     }
+
 
     function updateExitedValidators() external override onlyNexus {
         if(getRewards() < VALIDATOR_DEPOSIT) revert ValidatorNotExited();

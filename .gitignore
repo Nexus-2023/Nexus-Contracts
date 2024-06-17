@@ -26,3 +26,6 @@ contracts/proxy_test
 scripts/proxy_deploy.ts
 contracts/demo_contracts/delegate_test
 test/delegate_test.ts
+cache_forge
+out
+lib

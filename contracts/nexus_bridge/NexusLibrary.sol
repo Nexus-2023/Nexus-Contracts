@@ -2,17 +2,16 @@
 pragma solidity 0.8.19;
 import {IDepositContract} from "../interfaces/IDepositContract.sol";
 import {INexusInterface} from "../interfaces/INexusInterface.sol";
-import {INexusBridge} from "../interfaces/INexusBridge.sol";
 
 /**
- * @title Nexus Tangible Library
+ * @title Nexus Library
  * @author RohitAudit
  * @dev This is the library contract used by any bridge contract to integrate with Nexus Network without
  * adding addittional size to already contract
  */
 contract NexusLibrary {
     address public constant NEXUS_NETWORK =
-        0xd1C788Ac548Cb467b3c4B14CF1793BCa3c1dCBEB;
+        0xc0cb8f6c08AB23de6c2a73c49481FE112704F1b6;
     address public constant NEXUS_FEE_ADDRESS =
         0x735bf02E4435dFADfE47a5FE5FBD42Ef375864A9;
 
@@ -44,6 +43,7 @@ contract NexusLibrary {
     error ValidatorNotExited();
     error WaitingForValidatorExits();
     error NotDAO();
+    error IncorrectAmountSent();
 
     event RewardsRedeemed(uint256 amount);
     event SlashingUpdated(uint256 amount);
@@ -71,7 +71,7 @@ contract NexusLibrary {
             sstore(_slot, amount)
         }
     }
-
+    
     function getVariable(bytes32 _slot) public view returns (uint256) {
         uint256 variableValue;
         assembly {
@@ -92,6 +92,10 @@ contract NexusLibrary {
     ) external onlyNexus validNexusFee(_nexus_fee) {
         setVariable(NEXUS_FEE_PERCENTAGE_SLOT, _nexus_fee);
         emit NexusFeeChanged(_nexus_fee);
+    }
+
+    function balance() external view returns(uint256){
+        return (getVariable(AMOUNT_DEPOSITED_SLOT) - getVariable(AMOUNT_WITHDRAWN_SLOT));
     }
 
     function depositValidatorNexus(
@@ -126,6 +130,10 @@ contract NexusLibrary {
     function validatorsSlashed(uint256 amount) external onlyNexus {
         setVariable(AMOUNT_SLASHED_SLOT, amount);
         emit SlashingUpdated(amount);
+    }
+
+    function recieveExecutionRewards(uint256 amount) external payable {
+        if(amount!=msg.value) revert IncorrectAmountSent();
     }
 
     function getRewards() public view returns (uint256) {

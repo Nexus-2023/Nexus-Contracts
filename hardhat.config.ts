@@ -7,6 +7,8 @@ import "@typechain/hardhat";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
 import "@nomicfoundation/hardhat-chai-matchers";
+import "@nomicfoundation/hardhat-foundry";
+require("hardhat-contract-sizer");
 
 dotenv.config();
 

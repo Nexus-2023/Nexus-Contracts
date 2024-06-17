@@ -8,7 +8,9 @@ interface INexusBridge {
     function NEXUS_NETWORK() external view returns (address);
     function validatorCount() external view returns (uint256);
     function NexusFeePercentage() external view returns(uint256);
+    function balance() external view returns(uint256);
     function validatorsSlashed(uint256 amount) external;
     function updateExitedValidators() external;
+    function recieveExecutionRewards(uint256 amount) external payable;
     function depositValidatorNexus(INexusInterface.Validator[] calldata _validators,uint256 stakingLimit) external;
 }

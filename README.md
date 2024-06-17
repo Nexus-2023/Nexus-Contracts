@@ -14,9 +14,10 @@ via staking a percentage of ETH locked.
 - **[NexusBridge](contracts/nexus_bridge/NexusBaseBridge.sol)**: This contract contains the minimalist change needed for
 onboarding any rollup. Rollup has 3 choices as of now for bridge design:
     - DAO bridge: In this scenario, all the validator rewards are given back to the DAO
-- **[Withdrawal](contracts/Withdrawal.sol)**: This is contract that is created for rollups when they
-register with Nexus Network. This contract receives rewards that are earned by validators created through
-their bridge contract.
+    - C token bridge: In this scenario the tokens on L2 compound in value with respect to L1 eth just like how rocketpool works
+    - Rebase token bridge: In this scenario the tokens are rebased on L2 depending on the reqrds earned by validators just like LIDO
+- **[NodeOperator](contracts/NodeOperator.sol)**: This contract is responsible for registering node oeprators and mantaining clusters for Nexus Network.
+- **[ValidatorExecution](contracts/ValidatorExecutionRewards.sol)**: This contract recievs validator execution rewards that are sent back to the bridge contract of the rollup.
 
 ### Testing and Deploying
 Testing:
@@ -26,7 +27,7 @@ Testing:
       hardhat: {
         forking: {
           enabled: true,
-          url: process.env.GOERLI_URL || "",
+          url: process.env.HOLESKY_URL || "",
         },
       }
     }
@@ -41,13 +42,13 @@ Deploying:
 ```
 npm run deploy:local
 ```
-- Goerli network
+- Holesky network
 ```
-npm run deploy:goerli
+npm run deploy:holesky
 ```
 - For verifying the contracts:
 ```
-npm run verify:goerli
+npm run verify:holesky
 ```
 
 All the contracts address after deployment are stored in **output_network.json**

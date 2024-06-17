@@ -71,4 +71,5 @@ interface INexusInterface {
         address _rollupAdmin,
         ValidatorShares calldata _validatorShare
     ) external;
+    
 }

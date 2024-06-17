@@ -16,7 +16,7 @@ import {INexusBridge} from "../interfaces/INexusBridge.sol";
  */
 abstract contract NexusBaseBridge is INexusBridge {
     address public override NEXUS_NETWORK =
-        0xd1C788Ac548Cb467b3c4B14CF1793BCa3c1dCBEB;
+        0xc0cb8f6c08AB23de6c2a73c49481FE112704F1b6;
     address public NEXUS_FEE_ADDRESS =
         0x735bf02E4435dFADfE47a5FE5FBD42Ef375864A9;
     uint256 public amountDeposited;
@@ -36,6 +36,7 @@ abstract contract NexusBaseBridge is INexusBridge {
     error StakingLimitExceeding();
     error IncorrectNexusFee();
     error ValidatorNotExited();
+    error IncorrectAmountSent();
     error WaitingForValidatorExits();
 
     event SlashingUpdated(uint256 amount);
@@ -59,6 +60,14 @@ abstract contract NexusBaseBridge is INexusBridge {
     ) external override onlyNexus validNexusFee(_nexus_fee) {
         NexusFeePercentage = _nexus_fee;
         emit NexusFeeChanged(_nexus_fee);
+    }
+
+    function balance() external override view returns(uint256){
+        return (amountDeposited - amountWithdrawn);
+    }
+
+    function recieveExecutionRewards(uint256 amount) external override payable {
+        if(amount!=msg.value) revert IncorrectAmountSent();
     }
 
     function depositValidatorNexus(

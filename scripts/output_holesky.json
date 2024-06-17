@@ -1,0 +1,9 @@
+{
+    "reward_updation_bot": "0x14630e0428B9BbA12896402257fa09035f9F7447",
+    "nexus_bot": "0x14630e0428B9BbA12896402257fa09035f9F7447",
+    "NodeOperatorImpl": "0xF03CEc7a46338Cbda9E98B17f3bafADAe54Fa09A",
+    "NodeOperatorProxy": "0x8Ff9f1C8b04F6Fa3ADD49081114209BF2a7671bc",
+    "ValidatorExecutionRewards": "0x1c29e5e0818b65911e32aC0ECDb494df389435bA",
+    "NexusImpl": "0xEa8213EB7C11bd537e60B2AbbcF298623D807C34",
+    "NexusProxy": "0xc0cb8f6c08AB23de6c2a73c49481FE112704F1b6"
+}

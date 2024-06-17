@@ -78,4 +78,5 @@ contract NodeOperator is Ownable, UUPSUpgreadable, INodeOperator{
         if (ssvClusters[clusterId].length == 0) revert ClusterNotPresent();
         return ssvClusters[clusterId];
     }
+
 }

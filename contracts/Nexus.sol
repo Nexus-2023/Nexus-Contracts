@@ -9,7 +9,6 @@ import {ISSVNetworkCore} from "./interfaces/ISSVNetwork.sol";
 import {INexusInterface} from "./interfaces/INexusInterface.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {BytesArrayLibrary} from "./libraries/BytesArrayLibrary.sol";
-import "hardhat/console.sol";
 
 /**
  * @title Nexus Core Contract
@@ -35,15 +34,15 @@ contract Nexus is INexusInterface, Ownable, UUPSUpgreadable {
     address public NodeOperatorContract;
 
     // Goerli Address
-    // address private constant SSV_NETWORK =
+    // address public constant SSV_NETWORK =
     //     0xC3CD9A0aE89Fff83b71b58b6512D43F8a41f363D;
-    // address private constant SSV_TOKEN =
+    // address public constant SSV_TOKEN =
     //     0x3a9f01091C446bdE031E39ea8354647AFef091E7;
 
     // Holesky Address
-    address private constant SSV_NETWORK =
+    address public constant SSV_NETWORK =
         0x38A4794cCEd47d3baf7370CcC43B560D3a1beEFA;
-    address private constant SSV_TOKEN =
+    address public constant SSV_TOKEN =
         0xad45A78180961079BFaeEe349704F411dfF947C6;
     uint16 private constant BASIS_POINT = 10000;
 
@@ -210,8 +209,8 @@ contract Nexus is INexusInterface, Ownable, UUPSUpgreadable {
         uint64[] calldata operatorIds
     ) external onlyOffChainBot {
         if (validators[pubkey] != ValidatorStatus.SHARE_DEPOSITED) revert IncorrectValidatorStatus();
-        ISSVNetworkCore(SSV_NETWORK).exitValidator(pubkey, operatorIds);
         validators[pubkey] = ValidatorStatus.VALIDATOR_EXIT_SUBMITTED;
+        ISSVNetworkCore(SSV_NETWORK).exitValidator(pubkey, operatorIds);
         emit ValidatorExitSubmitted(rollupAdmin, pubkey);
     }
 
@@ -223,6 +222,7 @@ contract Nexus is INexusInterface, Ownable, UUPSUpgreadable {
     ) external onlyOffChainBot {
         if (validators[pubkey] != ValidatorStatus.VALIDATOR_EXIT_SUBMITTED)
             revert IncorrectValidatorStatus();
+        validators[pubkey] = ValidatorStatus.VALIDATOR_EXITED;
         ISSVNetworkCore(SSV_NETWORK).removeValidator(
             pubkey,
             operatorIds,
@@ -230,7 +230,6 @@ contract Nexus is INexusInterface, Ownable, UUPSUpgreadable {
         );
         INexusBridge(rollups[rollupAdmin].bridgeContract)
             .updateExitedValidators();
-        validators[pubkey] = ValidatorStatus.VALIDATOR_EXITED;
         emit ValidatorExited(rollupAdmin, pubkey);
     }
 

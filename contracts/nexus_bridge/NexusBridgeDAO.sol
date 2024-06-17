@@ -37,11 +37,11 @@ abstract contract NexusBridgeDAO is NexusBaseBridge {
         if (nexus_success) {
             emit NexusRewardsRedeemed(_nexus_rewards);
         }
+        rewardsClaimed += total_rewards;
         (bool dao_success, bytes memory dao_data) = reward_account.call{
             value: (total_rewards - _nexus_rewards),
             gas: 5000
         }("");
-        rewardsClaimed += total_rewards;
         if (dao_success) {
             emit RewardsRedeemed((total_rewards - _nexus_rewards));
         }

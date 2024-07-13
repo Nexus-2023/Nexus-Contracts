@@ -214,6 +214,27 @@ contract Nexus is INexusInterface, Ownable, UUPSUpgreadable {
         emit ValidatorExitSubmitted(rollupAdmin, pubkey);
     }
 
+    function operatorShuffle(
+        address _rollupAdmin,
+        ValidatorShares calldata _validatorShare
+    ) external onlyOffChainBot{
+        if (validators[_validatorShare.pubKey] != ValidatorStatus.VALIDATOR_EXITED) revert IncorrectValidatorStatus();
+        IERC20(SSV_TOKEN).approve(SSV_NETWORK, _validatorShare.amount);
+        ISSVNetworkCore(SSV_NETWORK).registerValidator(
+            _validatorShare.pubKey,
+            _validatorShare.operatorIds,
+            _validatorShare.sharesEncrypted,
+            _validatorShare.amount,
+            _validatorShare.cluster
+        );
+        validators[_validatorShare.pubKey] = ValidatorStatus.SHARE_DEPOSITED;
+        emit ValidatorShareSubmitted(
+            _validatorShare.pubKey,
+            _rollupAdmin,
+            _validatorShare.amount
+        );
+    }
+
     function validatorExitBalanceTransferred(
         address rollupAdmin,
         bytes calldata pubkey,
